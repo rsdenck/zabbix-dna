@@ -36,7 +36,12 @@ esac
 
 # Obter última versão do GitHub
 REPO="rsdenck/zabbix-dna"
-LATEST_TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+# Tenta obter a última release, se falhar, tenta obter a última tag
+LATEST_TAG=$(curl -sH "User-Agent: zabbix-dna-installer" "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
+if [ -z "$LATEST_TAG" ]; then
+    LATEST_TAG=$(curl -sH "User-Agent: zabbix-dna-installer" "https://api.github.com/repos/$REPO/tags" | grep '"name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+fi
 
 if [ -z "$LATEST_TAG" ]; then
     echo -e "${RED}Erro: Não foi possível obter a última versão do repositório.${NC}"
