@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Zabbix DNA - Installer Script
+# Version: 1.0.0
 # Performance. Observabilidade. Automação. Escalabilidade.
 
 set -e
