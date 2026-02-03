@@ -59,7 +59,13 @@ echo -e "Baixando de: $DOWNLOAD_URL"
 
 # Download temporário
 TEMP_DIR=$(mktemp -d)
-curl -L -o "$TEMP_DIR/zabbix-dna" "$DOWNLOAD_URL"
+echo -e "Fazendo download do binário..."
+if ! curl -L -f -o "$TEMP_DIR/zabbix-dna" "$DOWNLOAD_URL"; then
+    echo -e "${RED}Erro: Não foi possível baixar o binário para a versão $LATEST_TAG e arquitetura $GOARCH.${NC}"
+    echo -e "Aguarde alguns minutos se a release foi criada recentemente, pois os binários podem estar sendo gerados."
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
 
 # Instalação
 echo -e "${GREEN}Instalando em /usr/local/bin/zabbix-dna...${NC}"
