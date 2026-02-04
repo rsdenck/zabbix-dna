@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -81,3 +81,4 @@ func newProxyListCmd() *cobra.Command {
 
 	return cmd
 }
+

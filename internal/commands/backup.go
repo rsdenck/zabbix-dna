@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -95,3 +95,4 @@ func newBackupCmd() *cobra.Command {
 		},
 	}
 }
+

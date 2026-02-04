@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"bufio"
@@ -53,3 +53,4 @@ func newREPLCmd(rootCmd *cobra.Command) *cobra.Command {
 		},
 	}
 }
+

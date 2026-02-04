@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -73,3 +73,4 @@ func getMediaTypeName(t string) string {
 		return "Other"
 	}
 }
+

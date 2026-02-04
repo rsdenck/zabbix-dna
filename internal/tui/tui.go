@@ -1,4 +1,4 @@
-﻿package tui
+package tui
 
 import (
 	"fmt"
@@ -182,3 +182,4 @@ func Start() (string, error) {
 	res := finalModel.(model)
 	return res.choice, nil
 }
+

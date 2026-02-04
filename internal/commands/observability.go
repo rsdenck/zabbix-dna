@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"context"
@@ -167,3 +167,4 @@ func newTracesCmd() *cobra.Command {
 
 	return cmd
 }
+

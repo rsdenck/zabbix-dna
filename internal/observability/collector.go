@@ -1,4 +1,4 @@
-﻿package observability
+package observability
 
 import (
 	"context"
@@ -164,3 +164,4 @@ func (c *Collector) CollectTraces(ctx context.Context) error {
 
 	return nil
 }
+

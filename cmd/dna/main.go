@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"bufio"
@@ -118,3 +118,4 @@ func runBatch(rootCmd *cobra.Command, filePath string) {
 		fmt.Fprintf(os.Stderr, "Error reading batch file: %v\n", err)
 	}
 }
+

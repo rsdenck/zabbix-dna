@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"bufio"
@@ -62,3 +62,4 @@ service_name = "zabbix-dna"
 		},
 	}
 }
+

@@ -1,4 +1,4 @@
-﻿package observability
+package observability
 
 import (
 	"context"
@@ -98,3 +98,4 @@ func (e *OTLPEngine) InitTraces(ctx context.Context) (*trace.TracerProvider, err
 
 	return tp, nil
 }
+

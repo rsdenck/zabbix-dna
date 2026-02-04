@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -90,3 +90,4 @@ func newExportTemplateCmd() *cobra.Command {
 		},
 	}
 }
+

@@ -72,7 +72,7 @@ jobs:
 
       - name: Execute Tests
         run: |
-          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+          go test -v -race -tags nosalt -coverprofile=coverage.out -covermode=atomic ./...
 
       - name: Validate Installer Script
         run: |
@@ -113,7 +113,7 @@ jobs:
           fi
           mkdir -p dist
           BINARY_NAME="zabbix-dna-${{ matrix.goos }}-${{ matrix.goarch }}"
-          go build -v -trimpath \
+          go build -v -trimpath -tags nosalt \
             -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
             -o "dist/${BINARY_NAME}" ./cmd/dna/main.go
 

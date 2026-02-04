@@ -1,4 +1,4 @@
-﻿package wizard
+package wizard
 
 import (
 	"fmt"
@@ -185,3 +185,4 @@ func Start() error {
 	fmt.Printf("\nConfiguração salva com sucesso em: %s\n", configPath)
 	return nil
 }
+

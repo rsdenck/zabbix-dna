@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -165,3 +165,4 @@ func newMaintenanceDeleteCmd() *cobra.Command {
 		},
 	}
 }
+

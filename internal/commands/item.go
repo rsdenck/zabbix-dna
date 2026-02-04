@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -122,3 +122,4 @@ func newItemCreateCmd() *cobra.Command {
 
 	return cmd
 }
+

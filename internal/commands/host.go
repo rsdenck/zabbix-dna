@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -537,3 +537,4 @@ func newHostCloneCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&newName, "new-name", "n", "", "New name for the cloned host")
 	return cmd
 }
+

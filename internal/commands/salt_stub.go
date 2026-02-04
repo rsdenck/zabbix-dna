@@ -1,4 +1,4 @@
-﻿//go:build nosalt
+//go:build nosalt
 // +build nosalt
 
 package commands
@@ -18,3 +18,4 @@ func newSaltCmd() *cobra.Command {
 		},
 	}
 }
+

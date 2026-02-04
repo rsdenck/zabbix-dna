@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -89,3 +89,4 @@ func newScriptExecuteCmd() *cobra.Command {
 
 	return cmd
 }
+

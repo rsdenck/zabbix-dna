@@ -1,4 +1,4 @@
-﻿package api
+package api
 
 import (
 	"bytes"
@@ -106,3 +106,4 @@ func (c *ZabbixClient) Call(method string, params interface{}) (json.RawMessage,
 
 	return rpcResp.Result, nil
 }
+

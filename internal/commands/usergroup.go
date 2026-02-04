@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -107,3 +107,4 @@ func newUserGroupDeleteCmd() *cobra.Command {
 		},
 	}
 }
+

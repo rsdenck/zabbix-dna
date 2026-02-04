@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -132,3 +132,4 @@ func getPriorityName(p string) string {
 		return "Unknown"
 	}
 }
+

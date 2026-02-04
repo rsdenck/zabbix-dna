@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"fmt"
@@ -69,3 +69,4 @@ func newTestAPICmd() *cobra.Command {
 		},
 	}
 }
+

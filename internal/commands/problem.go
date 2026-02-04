@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -69,3 +69,4 @@ func newProblemListCmd() *cobra.Command {
 
 	return cmd
 }
+

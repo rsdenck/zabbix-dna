@@ -1,4 +1,4 @@
-﻿package config
+package config
 
 import (
 	"fmt"
@@ -59,3 +59,4 @@ func LoadConfig(path string) (*Config, error) {
 
 	return &cfg, nil
 }
+

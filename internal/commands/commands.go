@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"fmt"
@@ -79,3 +79,4 @@ func newVersionCmd() *cobra.Command {
 		},
 	}
 }
+

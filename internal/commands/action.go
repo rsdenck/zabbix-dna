@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -80,3 +80,4 @@ func getEventSourceName(s string) string {
 		return "Unknown"
 	}
 }
+

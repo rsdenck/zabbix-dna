@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -142,3 +142,4 @@ func getTemplateID(client *api.ZabbixClient, name string) string {
 	}
 	return ""
 }
+

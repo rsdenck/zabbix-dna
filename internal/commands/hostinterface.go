@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -241,3 +241,4 @@ func getInterfaceTypeName(t string) string {
 		return "Unknown"
 	}
 }
+

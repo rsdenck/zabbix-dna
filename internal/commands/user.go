@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -354,3 +354,4 @@ func newUserDisableCmd() *cobra.Command {
 		},
 	}
 }
+

@@ -1,4 +1,4 @@
-﻿package commands
+package commands
 
 import (
 	"encoding/json"
@@ -258,3 +258,4 @@ func newShowGraphsCmd() *cobra.Command {
 		},
 	}
 }
+
