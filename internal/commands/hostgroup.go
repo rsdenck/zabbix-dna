@@ -123,7 +123,7 @@ func newHostGroupDeleteCmd() *cobra.Command {
 			json.Unmarshal(result, &groups)
 
 			if len(groups) == 0 {
-				fmt.Printf("Host group not found: %s\n", args[0])
+				handleError(fmt.Errorf("host group not found: %s", args[0]))
 				return
 			}
 
@@ -167,7 +167,7 @@ func newHostGroupShowCmd() *cobra.Command {
 			json.Unmarshal(result, &groups)
 
 			if len(groups) == 0 {
-				fmt.Println("Host group not found")
+				handleError(fmt.Errorf("host group not found: %s", args[0]))
 				return
 			}
 
@@ -222,7 +222,7 @@ func newAddHostToGroupCmd() *cobra.Command {
 				var hosts []map[string]interface{}
 				json.Unmarshal(res, &hosts)
 				if len(hosts) == 0 {
-					fmt.Printf("Host not found: %s\n", hn)
+					handleError(fmt.Errorf("host not found: %s", hn))
 					continue
 				}
 				hostIDs = append(hostIDs, hosts[0]["hostid"].(string))
@@ -238,14 +238,14 @@ func newAddHostToGroupCmd() *cobra.Command {
 				var groups []map[string]interface{}
 				json.Unmarshal(res, &groups)
 				if len(groups) == 0 {
-					fmt.Printf("Host group not found: %s\n", gn)
+					handleError(fmt.Errorf("host group not found: %s", gn))
 					continue
 				}
 				groupIDs = append(groupIDs, groups[0]["groupid"].(string))
 			}
 
 			if len(hostIDs) == 0 || len(groupIDs) == 0 {
-				fmt.Println("No valid hosts or groups found to process.")
+				handleError(fmt.Errorf("no valid hosts or groups found to process"))
 				return
 			}
 
@@ -302,7 +302,7 @@ func newRemoveHostFromGroupCmd() *cobra.Command {
 				var hosts []map[string]interface{}
 				json.Unmarshal(res, &hosts)
 				if len(hosts) == 0 {
-					fmt.Printf("Host not found: %s\n", hn)
+					handleError(fmt.Errorf("host not found: %s", hn))
 					continue
 				}
 				hostIDs = append(hostIDs, hosts[0]["hostid"].(string))
@@ -318,14 +318,14 @@ func newRemoveHostFromGroupCmd() *cobra.Command {
 				var groups []map[string]interface{}
 				json.Unmarshal(res, &groups)
 				if len(groups) == 0 {
-					fmt.Printf("Host group not found: %s\n", gn)
+					handleError(fmt.Errorf("host group not found: %s", gn))
 					continue
 				}
 				groupIDs = append(groupIDs, groups[0]["groupid"].(string))
 			}
 
 			if len(hostIDs) == 0 || len(groupIDs) == 0 {
-				fmt.Println("No valid hosts or groups found to process.")
+				handleError(fmt.Errorf("no valid hosts or groups found to process"))
 				return
 			}
 
@@ -370,7 +370,7 @@ func newHostGroupPermissionsCmd() *cobra.Command {
 				var groups []map[string]interface{}
 				json.Unmarshal(res, &groups)
 				if len(groups) == 0 {
-					fmt.Printf("Host group not found: %s\n", gn)
+					handleError(fmt.Errorf("host group not found: %s", gn))
 					continue
 				}
 				groupIDs = append(groupIDs, groups[0]["groupid"].(string))
@@ -423,7 +423,7 @@ func newHostGroupPermissionsCmd() *cobra.Command {
 			}
 
 			if len(rows) == 0 {
-				fmt.Println("No specific permissions found for these groups.")
+				handleError(fmt.Errorf("no specific permissions found for these groups"))
 				return
 			}
 
@@ -431,5 +431,3 @@ func newHostGroupPermissionsCmd() *cobra.Command {
 		},
 	}
 }
-
-

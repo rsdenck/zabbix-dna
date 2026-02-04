@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -73,12 +71,14 @@ func newVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Print the version of Zabbix-DNA",
 		Run: func(cmd *cobra.Command, args []string) {
-			// Version will be injected at build time in main.go
-			// but we can also show some static info here
-			fmt.Println("ZABBIX-DNA CLI | v1.0.7")
-			fmt.Println("Engine: Go 1.24.2")
-			fmt.Println("Zabbix Compatibility: 6.4, 7.0, 7.2, 8.0")
-			fmt.Println("Features: SaltStack Integration, OTLP, TUI")
+			headers := []string{"Property", "Value"}
+			rows := [][]string{
+				{"Zabbix-DNA", "v1.0.7"},
+				{"Engine", "Go 1.24.2"},
+				{"Zabbix Compatibility", "6.4, 7.0, 7.2, 8.0"},
+				{"Features", "SaltStack, OTLP, TUI"},
+			}
+			outputResult(cmd, nil, headers, rows)
 		},
 	}
 }

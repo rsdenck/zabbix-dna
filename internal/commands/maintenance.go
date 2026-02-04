@@ -146,7 +146,7 @@ func newMaintenanceDeleteCmd() *cobra.Command {
 			json.Unmarshal(result, &periods)
 
 			if len(periods) == 0 {
-				fmt.Printf("Maintenance period not found: %s\n", args[0])
+				handleError(fmt.Errorf("maintenance period not found: %s", args[0]))
 				return
 			}
 
@@ -165,5 +165,3 @@ func newMaintenanceDeleteCmd() *cobra.Command {
 		},
 	}
 }
-
-

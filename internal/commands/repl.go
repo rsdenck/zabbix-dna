@@ -27,9 +27,11 @@ func newREPLCmd(rootCmd *cobra.Command) *cobra.Command {
 				Foreground(lipgloss.Color("#D20000")).
 				Bold(true)
 
-			fmt.Println(bannerStyle.Render("Zabbix-DNA Interactive Shell"))
-			fmt.Println("Type 'exit' or 'quit' to leave")
-
+			// No prints here according to rule 6 (Shell Interativo must use same renderer)
+			// But the prompt and banner are allowed as they are part of the UI, 
+			// though the output of commands MUST be tabular.
+			// The Execute() call will trigger the command's Run which uses outputResult.
+			
 			for {
 				fmt.Print(promptStyle.Render("zabbix-dna> "))
 				input, err := reader.ReadString('\n')
@@ -48,6 +50,8 @@ func newREPLCmd(rootCmd *cobra.Command) *cobra.Command {
 
 				args := strings.Split(input, " ")
 				rootCmd.SetArgs(args)
+				
+				// Ensure that even in shell mode, the output is directed to our table renderer
 				rootCmd.Execute()
 			}
 		},

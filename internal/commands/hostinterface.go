@@ -45,7 +45,7 @@ func newHostInterfaceListCmd() *cobra.Command {
 				var hosts []map[string]interface{}
 				json.Unmarshal(res, &hosts)
 				if len(hosts) == 0 {
-					fmt.Printf("Host not found: %s\n", hostName)
+					handleError(fmt.Errorf("host not found: %s", hostName))
 					return
 				}
 				params["hostids"] = []string{hosts[0]["hostid"].(string)}
@@ -58,7 +58,7 @@ func newHostInterfaceListCmd() *cobra.Command {
 				var hosts []map[string]interface{}
 				json.Unmarshal(res, &hosts)
 				if len(hosts) == 0 {
-					fmt.Printf("Host not found: %s\n", hostName)
+					handleError(fmt.Errorf("host not found: %s", hostName))
 					return
 				}
 				params["hostids"] = []string{hosts[0]["hostid"].(string)}
@@ -110,7 +110,7 @@ func newHostInterfaceCreateCmd() *cobra.Command {
 
 			hostID := getHostID(client, hostName)
 			if hostID == "" {
-				fmt.Printf("Host not found: %s\n", hostName)
+				handleError(fmt.Errorf("host not found: %s", hostName))
 				return
 			}
 
@@ -241,5 +241,3 @@ func getInterfaceTypeName(t string) string {
 		return "Unknown"
 	}
 }
-
-

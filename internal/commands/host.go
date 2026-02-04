@@ -180,7 +180,7 @@ func newHostShowCmd() *cobra.Command {
 			json.Unmarshal(result, &hosts)
 
 			if len(hosts) == 0 {
-				fmt.Println("Host not found")
+				handleError(fmt.Errorf("host not found: %s", args[0]))
 				return
 			}
 
@@ -309,7 +309,7 @@ func newHostDeleteCmd() *cobra.Command {
 			json.Unmarshal(result, &hosts)
 
 			if len(hosts) == 0 {
-				fmt.Printf("Host not found: %s\n", args[0])
+				handleError(fmt.Errorf("host not found: %s", args[0]))
 				return
 			}
 
@@ -352,7 +352,7 @@ func newHostUpdateCmd() *cobra.Command {
 			var hosts []map[string]interface{}
 			json.Unmarshal(result, &hosts)
 			if len(hosts) == 0 {
-				fmt.Println("Host not found")
+				handleError(fmt.Errorf("host not found: %s", args[0]))
 				return
 			}
 			hostID := hosts[0]["hostid"].(string)
@@ -408,7 +408,7 @@ func newHostEnableCmd() *cobra.Command {
 			var hosts []map[string]interface{}
 			json.Unmarshal(result, &hosts)
 			if len(hosts) == 0 {
-				fmt.Println("Host not found")
+				handleError(fmt.Errorf("host not found: %s", args[0]))
 				return
 			}
 
@@ -447,7 +447,7 @@ func newHostDisableCmd() *cobra.Command {
 			var hosts []map[string]interface{}
 			json.Unmarshal(result, &hosts)
 			if len(hosts) == 0 {
-				fmt.Println("Host not found")
+				handleError(fmt.Errorf("host not found: %s", args[0]))
 				return
 			}
 
@@ -492,7 +492,7 @@ func newHostCloneCmd() *cobra.Command {
 			var hosts []map[string]interface{}
 			json.Unmarshal(result, &hosts)
 			if len(hosts) == 0 {
-				fmt.Println("Source host not found")
+				handleError(fmt.Errorf("source host not found: %s", args[0]))
 				return
 			}
 			src := hosts[0]
@@ -537,5 +537,3 @@ func newHostCloneCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&newName, "new-name", "n", "", "New name for the cloned host")
 	return cmd
 }
-
-

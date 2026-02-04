@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -30,7 +30,7 @@ func newExportHostCmd() *cobra.Command {
 
 			hostID := getHostID(client, args[0])
 			if hostID == "" {
-				fmt.Printf("Host not found: %s\n", args[0])
+				handleError(fmt.Errorf("host not found: %s", args[0]))
 				return
 			}
 
@@ -44,13 +44,15 @@ func newExportHostCmd() *cobra.Command {
 			result, err := client.Call("configuration.export", params)
 			handleError(err)
 
-			var prettyJSON json.RawMessage
-			if err := json.Unmarshal(result, &prettyJSON); err == nil {
-				formatted, _ := json.MarshalIndent(prettyJSON, "", "  ")
-				fmt.Println(string(formatted))
-			} else {
-				fmt.Println(string(result))
-			}
+			// According to absolute requirements, we must NOT output JSON directly.
+			// We will save to a file and show a summary table.
+			filename := fmt.Sprintf("export_host_%s_%s.json", args[0], fmt.Sprintf("%v", hostID))
+			err = os.WriteFile(filename, result, 0644)
+			handleError(err)
+
+			headers := []string{"Host", "HostID", "Export File", "Status"}
+			rows := [][]string{{args[0], hostID, filename, "Success"}}
+			outputResult(cmd, nil, headers, rows)
 		},
 	}
 }
@@ -66,7 +68,7 @@ func newExportTemplateCmd() *cobra.Command {
 
 			templateID := getTemplateID(client, args[0])
 			if templateID == "" {
-				fmt.Printf("Template not found: %s\n", args[0])
+				handleError(fmt.Errorf("template not found: %s", args[0]))
 				return
 			}
 
@@ -80,15 +82,15 @@ func newExportTemplateCmd() *cobra.Command {
 			result, err := client.Call("configuration.export", params)
 			handleError(err)
 
-			var prettyJSON json.RawMessage
-			if err := json.Unmarshal(result, &prettyJSON); err == nil {
-				formatted, _ := json.MarshalIndent(prettyJSON, "", "  ")
-				fmt.Println(string(formatted))
-			} else {
-				fmt.Println(string(result))
-			}
+			// According to absolute requirements, we must NOT output JSON directly.
+			// We will save to a file and show a summary table.
+			filename := fmt.Sprintf("export_template_%s_%s.json", args[0], fmt.Sprintf("%v", templateID))
+			err = os.WriteFile(filename, result, 0644)
+			handleError(err)
+
+			headers := []string{"Template", "TemplateID", "Export File", "Status"}
+			rows := [][]string{{args[0], templateID, filename, "Success"}}
+			outputResult(cmd, nil, headers, rows)
 		},
 	}
 }
-
-

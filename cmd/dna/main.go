@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	version = "dev"
+	version = "v1.0.7"
 	commit  = "none"
 	date    = "unknown"
 
@@ -80,7 +80,6 @@ written 100% in Go with a focus on observability and automation.`,
 
 	// Persistent flags
 	rootCmd.PersistentFlags().StringP("config", "c", "zabbix-dna.toml", "config file")
-	rootCmd.PersistentFlags().StringP("format", "f", "table", "output format (table, json)")
 	rootCmd.PersistentFlags().String("batch", "", "run commands from a file")
 
 	// Add commands
@@ -118,5 +117,3 @@ func runBatch(rootCmd *cobra.Command, filePath string) {
 		fmt.Fprintf(os.Stderr, "Error reading batch file: %v\n", err)
 	}
 }
-
-

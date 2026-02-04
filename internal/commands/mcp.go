@@ -29,20 +29,21 @@ func newMCPZabbixCmd() *cobra.Command {
 		Short: "Run Zabbix MCP Server",
 		Long:  `Launch the Zabbix MCP server to connect AI assistants to Zabbix monitoring.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Checking environment for Zabbix MCP Server...")
-
 			uvPath, err := exec.LookPath("uv")
 			if err != nil {
-				fmt.Println("Error: 'uv' not found in PATH. Please install it from https://github.com/astral-sh/uv")
+				handleError(fmt.Errorf("'uv' not found in PATH. Please install it from https://github.com/astral-sh/uv"))
 				return
 			}
 
-			fmt.Printf("Found 'uv' at: %s\n", uvPath)
-			fmt.Printf("Preparing to launch Zabbix MCP Server on port %d (Read-Only: %v)...\n", port, readOnly)
-			fmt.Println("\nExecution command:")
-			fmt.Printf("uv run python -m zabbix_mcp_server --port %d\n", port)
-
-			fmt.Println("\nNote: Ensure you have the zabbix-mcp-server package installed or available in your uv project.")
+			headers := []string{"Environment Check", "Result"}
+			rows := [][]string{
+				{"'uv' Path", uvPath},
+				{"Launch Command", fmt.Sprintf("uv run python -m zabbix_mcp_server --port %d", port)},
+				{"Port", fmt.Sprintf("%d", port)},
+				{"Read-Only", fmt.Sprintf("%v", readOnly)},
+				{"Status", "Ready to Launch"},
+			}
+			outputResult(cmd, nil, headers, rows)
 		},
 	}
 
@@ -60,18 +61,20 @@ func newMCPGrafanaCmd() *cobra.Command {
 		Short: "Run Grafana MCP Server",
 		Long:  `Launch the Grafana MCP server to connect AI assistants to Grafana dashboards and metrics.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Checking environment for Grafana MCP Server...")
-
 			npxPath, err := exec.LookPath("npx")
 			if err != nil {
-				fmt.Println("Error: 'npx' (Node.js) not found in PATH. Please install Node.js from https://nodejs.org/")
+				handleError(fmt.Errorf("'npx' (Node.js) not found in PATH. Please install Node.js from https://nodejs.org/"))
 				return
 			}
 
-			fmt.Printf("Found 'npx' at: %s\n", npxPath)
-			fmt.Printf("Preparing to launch Grafana MCP Server for host %s...\n", host)
-			fmt.Println("\nExecution command:")
-			fmt.Printf("npx @grafana/mcp-grafana --host %s\n", host)
+			headers := []string{"Environment Check", "Result"}
+			rows := [][]string{
+				{"'npx' Path", npxPath},
+				{"Launch Command", fmt.Sprintf("npx @grafana/mcp-grafana --host %s", host)},
+				{"Host URL", host},
+				{"Status", "Ready to Launch"},
+			}
+			outputResult(cmd, nil, headers, rows)
 		},
 	}
 

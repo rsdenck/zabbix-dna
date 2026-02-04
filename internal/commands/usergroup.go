@@ -88,7 +88,7 @@ func newUserGroupDeleteCmd() *cobra.Command {
 			json.Unmarshal(result, &groups)
 
 			if len(groups) == 0 {
-				fmt.Printf("User group not found: %s\n", args[0])
+				handleError(fmt.Errorf("user group not found: %s", args[0]))
 				return
 			}
 

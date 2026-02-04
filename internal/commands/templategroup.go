@@ -116,7 +116,7 @@ func newTemplateGroupDeleteCmd() *cobra.Command {
 			json.Unmarshal(result, &groups)
 
 			if len(groups) == 0 {
-				fmt.Printf("Template group not found: %s\n", args[0])
+				handleError(fmt.Errorf("template group not found: %s", args[0]))
 				return
 			}
 

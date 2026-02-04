@@ -86,7 +86,7 @@ func newShowItemCmd() *cobra.Command {
 			json.Unmarshal(result, &items)
 
 			if len(items) == 0 {
-				fmt.Println("Item not found")
+				handleError(fmt.Errorf("item not found: %s", args[0]))
 				return
 			}
 

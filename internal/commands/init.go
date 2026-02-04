@@ -49,10 +49,7 @@ service_name = "zabbix-dna"
 `, url, token, user, password)
 
 			err := os.WriteFile("zabbix-dna.toml", []byte(configContent), 0644)
-			if err != nil {
-				fmt.Printf("Failed to write config file: %v\n", err)
-				return
-			}
+			handleError(err)
 
 			headers := []string{"File", "Status"}
 			rows := [][]string{
@@ -62,5 +59,3 @@ service_name = "zabbix-dna"
 		},
 	}
 }
-
-

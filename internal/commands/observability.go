@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"zabbix-dna/internal/api"
 	"zabbix-dna/internal/config"
 	"zabbix-dna/internal/observability"
+
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
 )
@@ -42,26 +42,24 @@ func newMetricsCmd() *cobra.Command {
 			}
 
 			if endpoint == "" {
-				fmt.Println("Error: OTLP endpoint not specified")
+				handleError(fmt.Errorf("OTLP endpoint not specified"))
 				return
 			}
 
-			client := api.NewClient(cfg.Zabbix.URL, cfg.Zabbix.Token, cfg.Zabbix.Timeout)
-			if cfg.Zabbix.Token == "" && cfg.Zabbix.User != "" {
-				err := client.Login(cfg.Zabbix.User, cfg.Zabbix.Password)
-				if err != nil {
-					fmt.Printf("Login failed: %v\n", err)
-					return
-				}
-			}
+			client, err := getZabbixClient(cmd)
+			handleError(err)
 
-			fmt.Printf("Starting metrics export to %s...\n", endpoint)
+			headers := []string{"Service", "Endpoint", "Interval", "Status"}
+			rows := [][]string{
+				{"Metrics Exporter", endpoint, interval, "Starting..."},
+			}
+			outputResult(cmd, nil, headers, rows)
 
 			engine := observability.NewOTLPEngine(endpoint, "zabbix-dna")
 			ctx := context.Background()
 			mp, err := engine.InitMetrics(ctx)
 			if err != nil {
-				fmt.Printf("Failed to initialize metrics: %v\n", err)
+				handleError(fmt.Errorf("failed to initialize metrics: %v", err))
 				return
 			}
 			defer mp.Shutdown(ctx)
@@ -74,15 +72,11 @@ func newMetricsCmd() *cobra.Command {
 			ticker := time.NewTicker(duration)
 			defer ticker.Stop()
 
-			fmt.Printf("Metrics engine active (interval: %s). Press Ctrl+C to stop.\n", interval)
-
 			for {
 				select {
 				case <-ticker.C:
 					if err := collector.CollectMetrics(ctx); err != nil {
-						fmt.Printf("Collection error: %v\n", err)
-					} else {
-						fmt.Println("Metrics collected and exported.")
+						handleError(fmt.Errorf("collection error: %v", err))
 					}
 				case <-ctx.Done():
 					return
@@ -113,26 +107,24 @@ func newTracesCmd() *cobra.Command {
 			}
 
 			if endpoint == "" {
-				fmt.Println("Error: OTLP endpoint not specified")
+				handleError(fmt.Errorf("OTLP endpoint not specified"))
 				return
 			}
 
-			client := api.NewClient(cfg.Zabbix.URL, cfg.Zabbix.Token, cfg.Zabbix.Timeout)
-			if cfg.Zabbix.Token == "" && cfg.Zabbix.User != "" {
-				err := client.Login(cfg.Zabbix.User, cfg.Zabbix.Password)
-				if err != nil {
-					fmt.Printf("Login failed: %v\n", err)
-					return
-				}
-			}
+			client, err := getZabbixClient(cmd)
+			handleError(err)
 
-			fmt.Printf("Starting traces export to %s...\n", endpoint)
+			headers := []string{"Service", "Endpoint", "Interval", "Status"}
+			rows := [][]string{
+				{"Traces Exporter", endpoint, interval, "Starting..."},
+			}
+			outputResult(cmd, nil, headers, rows)
 
 			engine := observability.NewOTLPEngine(endpoint, "zabbix-dna")
 			ctx := context.Background()
 			tp, err := engine.InitTraces(ctx)
 			if err != nil {
-				fmt.Printf("Failed to initialize traces: %v\n", err)
+				handleError(fmt.Errorf("failed to initialize traces: %v", err))
 				return
 			}
 			defer tp.Shutdown(ctx)
@@ -145,15 +137,11 @@ func newTracesCmd() *cobra.Command {
 			ticker := time.NewTicker(duration)
 			defer ticker.Stop()
 
-			fmt.Printf("Traces engine active (interval: %s). Press Ctrl+C to stop.\n", interval)
-
 			for {
 				select {
 				case <-ticker.C:
 					if err := collector.CollectTraces(ctx); err != nil {
-						fmt.Printf("Collection error: %v\n", err)
-					} else {
-						fmt.Println("Traces collected and exported.")
+						handleError(fmt.Errorf("collection error: %v", err))
 					}
 				case <-ctx.Done():
 					return
@@ -167,5 +155,3 @@ func newTracesCmd() *cobra.Command {
 
 	return cmd
 }
-
-

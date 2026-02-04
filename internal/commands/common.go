@@ -7,77 +7,23 @@ import (
 
 	"zabbix-dna/internal/api"
 	"zabbix-dna/internal/config"
+	"zabbix-dna/internal/output"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
 var (
 	headerStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#D20000")).
-			Padding(0, 1).
-			Bold(true)
-
-	borderStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#D20000"))
+		Foreground(lipgloss.Color("#FFFFFF")).
+		Bold(true)
 )
 
-type JSONResponse struct {
-	Message    string      `json:"message"`
-	Errors     []string    `json:"errors"`
-	ReturnCode string      `json:"return_code"`
-	Result     interface{} `json:"result"`
-}
-
 func outputResult(cmd *cobra.Command, result interface{}, headers []string, rows [][]string) {
-	format, _ := cmd.Flags().GetString("format")
-	if format == "json" {
-		resp := JSONResponse{
-			Message:    "",
-			Errors:     []string{},
-			ReturnCode: "Done",
-			Result:     result,
-		}
-		data, _ := json.MarshalIndent(resp, "", "  ")
-		fmt.Println(string(data))
-		return
-	}
-
-	// Default to table format
-	table := tablewriter.NewWriter(os.Stdout)
-
-	// Custom table style to match images
-	table.SetHeader(headers)
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-
-	// Image-like styling
-	table.SetCenterSeparator("┼")
-	table.SetColumnSeparator("│")
-	table.SetRowSeparator("─")
-
-	table.SetHeaderLine(true)
-	table.SetBorder(true)
-	table.SetTablePadding("  ")
-	table.SetNoWhiteSpace(false)
-
-	// Apply colors to header if terminal supports it
-	table.SetHeaderColor(getHeaderColors(len(headers))...)
-
-	table.AppendBulk(rows)
-	table.Render()
-}
-
-func getHeaderColors(count int) []tablewriter.Colors {
-	colors := make([]tablewriter.Colors, count)
-	for i := range colors {
-		colors[i] = tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiWhiteColor, tablewriter.BgRedColor}
-	}
-	return colors
+	// Prohibited: JSON, XML, YAML, etc.
+	// Only centralized TableRenderer is allowed.
+	renderer := output.NewTableRenderer(headers, rows)
+	renderer.Render()
 }
 
 func getZabbixClient(cmd *cobra.Command) (*api.ZabbixClient, error) {
@@ -142,5 +88,3 @@ func getTemplateID(client *api.ZabbixClient, name string) string {
 	}
 	return ""
 }
-
-

@@ -99,7 +99,7 @@ func newUserShowCmd() *cobra.Command {
 			json.Unmarshal(result, &users)
 
 			if len(users) == 0 {
-				fmt.Printf("User not found: %s\n", args[0])
+				handleError(fmt.Errorf("user not found: %s", args[0]))
 				return
 			}
 
@@ -193,7 +193,7 @@ func newUserUpdateCmd() *cobra.Command {
 			var users []map[string]interface{}
 			json.Unmarshal(res, &users)
 			if len(users) == 0 {
-				fmt.Println("User not found")
+				handleError(fmt.Errorf("user not found: %s", args[0]))
 				return
 			}
 			userID := users[0]["userid"].(string)
@@ -243,7 +243,7 @@ func newUserDeleteCmd() *cobra.Command {
 			json.Unmarshal(result, &users)
 
 			if len(users) == 0 {
-				fmt.Printf("User not found: %s\n", args[0])
+				handleError(fmt.Errorf("user not found: %s", args[0]))
 				return
 			}
 
@@ -282,7 +282,7 @@ func newUserEnableCmd() *cobra.Command {
 			var users []map[string]interface{}
 			json.Unmarshal(res, &users)
 			if len(users) == 0 {
-				fmt.Println("User not found")
+				handleError(fmt.Errorf("user not found: %s", args[0]))
 				return
 			}
 			user := users[0]
@@ -328,7 +328,7 @@ func newUserDisableCmd() *cobra.Command {
 			var users []map[string]interface{}
 			json.Unmarshal(res, &users)
 			if len(users) == 0 {
-				fmt.Println("User not found")
+				handleError(fmt.Errorf("user not found: %s", args[0]))
 				return
 			}
 			user := users[0]
@@ -354,5 +354,3 @@ func newUserDisableCmd() *cobra.Command {
 		},
 	}
 }
-
-

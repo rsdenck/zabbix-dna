@@ -91,7 +91,7 @@ func newTemplateShowCmd() *cobra.Command {
 			json.Unmarshal(result, &templates)
 
 			if len(templates) == 0 {
-				fmt.Printf("Template not found: %s\n", args[0])
+				handleError(fmt.Errorf("template not found: %s", args[0]))
 				return
 			}
 
@@ -139,7 +139,7 @@ func newTemplateDeleteCmd() *cobra.Command {
 			json.Unmarshal(result, &templates)
 
 			if len(templates) == 0 {
-				fmt.Printf("Template not found: %s\n", args[0])
+				handleError(fmt.Errorf("template not found: %s", args[0]))
 				return
 			}
 
@@ -158,5 +158,3 @@ func newTemplateDeleteCmd() *cobra.Command {
 		},
 	}
 }
-
-

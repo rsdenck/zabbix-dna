@@ -32,19 +32,16 @@ func newSaltPingCmd() *cobra.Command {
 		Short: "Ping minions (proxies)",
 		Run: func(cmd *cobra.Command, args []string) {
 			client, err := getSaltClient(cmd)
-			if err != nil {
-				fmt.Printf("Error: %v\n", err)
-				return
-			}
+			handleError(err)
 
 			jid := client.GetJid()
 
 			err = client.SendCommand(jid, target, targetType, "test.ping")
 			if err != nil {
 				if strings.Contains(err.Error(), "root_key") {
-					fmt.Println("\nError: SaltStack root_key not found. This command must be run on the Salt Master.")
+					handleError(fmt.Errorf("SaltStack root_key not found. This command must be run on the Salt Master"))
 				} else {
-					fmt.Printf("\nError sending command: %v\n", err)
+					handleError(err)
 				}
 				return
 			}
@@ -53,13 +50,7 @@ func newSaltPingCmd() *cobra.Command {
 			rows := [][]string{
 				{target, jid, "test.ping", "Published Successfully"},
 			}
-			resp := map[string]string{
-				"target": target,
-				"jid":    jid,
-				"module": "test.ping",
-				"status": "success",
-			}
-			outputResult(cmd, resp, headers, rows)
+			outputResult(cmd, nil, headers, rows)
 		},
 	}
 
@@ -80,19 +71,16 @@ func newSaltRunCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			module := args[0]
 			client, err := getSaltClient(cmd)
-			if err != nil {
-				fmt.Printf("Error: %v\n", err)
-				return
-			}
+			handleError(err)
 
 			jid := client.GetJid()
 
 			err = client.SendCommand(jid, target, targetType, module)
 			if err != nil {
 				if strings.Contains(err.Error(), "root_key") {
-					fmt.Println("\nError: SaltStack root_key not found. This command must be run on the Salt Master.")
+					handleError(fmt.Errorf("SaltStack root_key not found. This command must be run on the Salt Master"))
 				} else {
-					fmt.Printf("\nError running command: %v\n", err)
+					handleError(err)
 				}
 				return
 			}
@@ -101,13 +89,7 @@ func newSaltRunCmd() *cobra.Command {
 			rows := [][]string{
 				{target, jid, module, "Published Successfully"},
 			}
-			resp := map[string]string{
-				"target": target,
-				"jid":    jid,
-				"module": module,
-				"status": "success",
-			}
-			outputResult(cmd, resp, headers, rows)
+			outputResult(cmd, nil, headers, rows)
 		},
 	}
 
