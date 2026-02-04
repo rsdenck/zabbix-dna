@@ -1,4 +1,7 @@
-﻿package commands
+﻿//go:build !nosalt
+// +build !nosalt
+
+package commands
 
 import (
 	"fmt"

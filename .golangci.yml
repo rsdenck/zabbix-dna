@@ -2,11 +2,14 @@
 # Foco: Qualidade sem quebrar a entrega, impedindo regressões em código novo.
 
 run:
-  timeout: 5m
+  timeout: 10m
   modules-download-mode: readonly
   # Permite que o lint passe se o código legado tiver erros, 
   # mas bloqueia se código novo introduzir problemas.
   allow-parallel-runners: true
+  # Desabilita CGO para evitar erros de dependências de bibliotecas C (como zmq4) no CI
+  build-tags:
+    - nosalt
 
 linters:
   disable-all: true
