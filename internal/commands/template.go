@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -96,18 +96,22 @@ func newTemplateShowCmd() *cobra.Command {
 			}
 
 			t := templates[0]
-			fmt.Printf("ID:         %s\n", t["templateid"])
-			fmt.Printf("Host:       %s\n", t["host"])
-			fmt.Printf("Name:       %s\n", t["name"])
-			fmt.Printf("Items:      %s\n", t["items"])
+			headers := []string{"Property", "Value"}
+			rows := [][]string{
+				{"ID", fmt.Sprintf("%v", t["templateid"])},
+				{"Host", fmt.Sprintf("%v", t["host"])},
+				{"Name", fmt.Sprintf("%v", t["name"])},
+				{"Items", fmt.Sprintf("%v", t["items"])},
+			}
 
-			fmt.Println("\nGroups:")
 			if groups, ok := t["groups"].([]interface{}); ok {
 				for _, g := range groups {
 					group := g.(map[string]interface{})
-					fmt.Printf("- %s (%s)\n", group["name"], group["groupid"])
+					rows = append(rows, []string{"Group", fmt.Sprintf("%s (%s)", group["name"], group["groupid"])})
 				}
 			}
+
+			outputResult(cmd, templates[0], headers, rows)
 		},
 	}
 }
@@ -142,10 +146,15 @@ func newTemplateDeleteCmd() *cobra.Command {
 			templateID := templates[0]["templateid"].(string)
 
 			// Delete the template
-			_, err = client.Call("template.delete", []string{templateID})
+			resp, err := client.Call("template.delete", []string{templateID})
 			handleError(err)
 
-			fmt.Printf("Template %s (ID: %s) deleted successfully\n", args[0], templateID)
+			var deleteResp map[string]interface{}
+			json.Unmarshal(resp, &deleteResp)
+
+			headers := []string{"Template", "Action", "Status", "ID"}
+			rows := [][]string{{args[0], "Delete", "Success", templateID}}
+			outputResult(cmd, deleteResp, headers, rows)
 		},
 	}
 }

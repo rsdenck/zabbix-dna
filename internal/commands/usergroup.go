@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -95,10 +95,15 @@ func newUserGroupDeleteCmd() *cobra.Command {
 			groupID := groups[0]["usrgrpid"].(string)
 
 			// Delete the group
-			_, err = client.Call("usergroup.delete", []string{groupID})
+			resp, err := client.Call("usergroup.delete", []string{groupID})
 			handleError(err)
 
-			fmt.Printf("User group %s (ID: %s) deleted successfully\n", args[0], groupID)
+			var deleteResp map[string]interface{}
+			json.Unmarshal(resp, &deleteResp)
+
+			headers := []string{"User Group", "Action", "Status"}
+			rows := [][]string{{args[0], "Delete", "Success"}}
+			outputResult(cmd, deleteResp, headers, rows)
 		},
 	}
 }

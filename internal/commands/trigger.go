@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -101,9 +101,12 @@ func newTriggerCreateCmd() *cobra.Command {
 			json.Unmarshal(result, &resp)
 			triggerIDs := resp["triggerids"].([]interface{})
 
-			fmt.Printf("Trigger created successfully with ID: %s\n", triggerIDs[0])
+			headers := []string{"Trigger", "Action", "Status", "ID"}
+			rows := [][]string{{args[0], "Create", "Success", fmt.Sprintf("%v", triggerIDs[0])}}
+			outputResult(cmd, resp, headers, rows)
 		},
 	}
+}
 
 	cmd.Flags().StringVarP(&expression, "expression", "e", "", "Trigger expression")
 	cmd.Flags().IntVarP(&priority, "priority", "p", 0, "Trigger priority (0-5)")

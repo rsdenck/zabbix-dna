@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -104,9 +104,12 @@ func newItemCreateCmd() *cobra.Command {
 			json.Unmarshal(result, &resp)
 			itemIDs := resp["itemids"].([]interface{})
 
-			fmt.Printf("Item created successfully with ID: %s\n", itemIDs[0])
+			headers := []string{"Item Name", "Action", "Status", "ID"}
+			rows := [][]string{{args[0], "Create", "Success", fmt.Sprintf("%v", itemIDs[0])}}
+			outputResult(cmd, resp, headers, rows)
 		},
 	}
+}
 
 	cmd.Flags().StringVarP(&hostID, "hostid", "H", "", "Host ID for the item")
 	cmd.Flags().StringVarP(&key, "key", "k", "", "Key for the item")

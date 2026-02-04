@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -37,10 +37,17 @@ func newScriptListCmd() *cobra.Command {
 			var scripts []map[string]interface{}
 			json.Unmarshal(result, &scripts)
 
-			fmt.Printf("%-10s %-30s %-50s\n", "ID", "Name", "Command")
+			headers := []string{"ID", "Name", "Command"}
+			var rows [][]string
 			for _, s := range scripts {
-				fmt.Printf("%-10s %-30s %-50s\n", s["scriptid"], s["name"], s["command"])
+				rows = append(rows, []string{
+					fmt.Sprintf("%v", s["scriptid"]),
+					fmt.Sprintf("%v", s["name"]),
+					fmt.Sprintf("%v", s["command"]),
+				})
 			}
+
+			outputResult(cmd, scripts, headers, rows)
 		},
 	}
 
@@ -70,8 +77,9 @@ func newScriptExecuteCmd() *cobra.Command {
 			json.Unmarshal(result, &resp)
 
 			if value, ok := resp["value"].(string); ok {
-				fmt.Println("Result:")
-				fmt.Println(value)
+				headers := []string{"Script execution result"}
+				rows := [][]string{{value}}
+				outputResult(cmd, resp, headers, rows)
 			}
 		},
 	}

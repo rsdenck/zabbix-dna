@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"bufio"
@@ -54,7 +54,11 @@ service_name = "zabbix-dna"
 				return
 			}
 
-			fmt.Println("Configuration saved to zabbix-dna.toml")
+			headers := []string{"File", "Status"}
+			rows := [][]string{
+				{"zabbix-dna.toml", "Saved Successfully"},
+			}
+			outputResult(cmd, map[string]string{"file": "zabbix-dna.toml", "status": "success"}, headers, rows)
 		},
 	}
 }

@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -13,7 +13,8 @@ func newMacroCmd() *cobra.Command {
 		Short: "Manage Zabbix user macros",
 	}
 
-	cmd.AddCommand(newMacroListCmd())
+	cmd.AddCommand(newMacroListCmd())   // show_host_macros -> macro list
+	cmd.AddCommand(newMacroCreateCmd()) // create_global_macro -> macro create
 
 	return cmd
 }
@@ -23,8 +24,9 @@ func newMacroListCmd() *cobra.Command {
 	var templateName string
 
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List macros for a host or template",
+		Use:     "list",
+		Aliases: []string{"show_host_macros"},
+		Short:   "List macros for a host or template",
 		Run: func(cmd *cobra.Command, args []string) {
 			client, err := getZabbixClient(cmd)
 			handleError(err)
@@ -48,10 +50,16 @@ func newMacroListCmd() *cobra.Command {
 			var macros []map[string]interface{}
 			json.Unmarshal(result, &macros)
 
-			fmt.Printf("%-30s %-50s\n", "Macro", "Value")
+			headers := []string{"Macro", "Value"}
+			var rows [][]string
 			for _, m := range macros {
-				fmt.Printf("%-30s %-50s\n", m["macro"], m["value"])
+				rows = append(rows, []string{
+					fmt.Sprintf("%v", m["macro"]),
+					fmt.Sprintf("%v", m["value"]),
+				})
 			}
+
+			outputResult(cmd, macros, headers, rows)
 		},
 	}
 
@@ -59,4 +67,32 @@ func newMacroListCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&templateName, "template", "T", "", "Template name to list macros for")
 
 	return cmd
+}
+
+func newMacroCreateCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "create [macro] [value]",
+		Aliases: []string{"create_global_macro"},
+		Short:   "Create a new global macro",
+		Args:    cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			client, err := getZabbixClient(cmd)
+			handleError(err)
+
+			params := map[string]interface{}{
+				"macro": args[0],
+				"value": args[1],
+			}
+
+			result, err := client.Call("usermacro.createglobal", params)
+			handleError(err)
+
+			var resp map[string]interface{}
+			json.Unmarshal(result, &resp)
+
+			headers := []string{"Macro", "Value", "Action", "Status"}
+			rows := [][]string{{args[0], args[1], "Create Global Macro", "Success"}}
+			outputResult(cmd, resp, headers, rows)
+		},
+	}
 }

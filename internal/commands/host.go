@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -14,10 +14,15 @@ func newHostCmd() *cobra.Command {
 		Short: "Manage Zabbix hosts",
 	}
 
-	cmd.AddCommand(newHostListCmd())
-	cmd.AddCommand(newHostShowCmd())
-	cmd.AddCommand(newHostCreateCmd())
-	cmd.AddCommand(newHostDeleteCmd())
+	// Mapeamento de comandos conforme solicitado
+	cmd.AddCommand(newHostCreateCmd())  // create_host -> host create
+	cmd.AddCommand(newHostDeleteCmd())  // remove_host -> host delete
+	cmd.AddCommand(newHostUpdateCmd())  // update_host -> host update
+	cmd.AddCommand(newHostShowCmd())    // show_host -> host show
+	cmd.AddCommand(newHostListCmd())    // show_hosts -> host list
+	cmd.AddCommand(newHostCloneCmd())   // clone_host -> host clone
+	cmd.AddCommand(newHostEnableCmd())  // enable_host -> host enable
+	cmd.AddCommand(newHostDisableCmd()) // disable_host -> host disable
 
 	return cmd
 }
@@ -27,8 +32,9 @@ func newHostListCmd() *cobra.Command {
 	var search string
 
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List Zabbix hosts",
+		Use:     "list",
+		Aliases: []string{"show_hosts"},
+		Short:   "List Zabbix hosts",
 		Run: func(cmd *cobra.Command, args []string) {
 			client, err := getZabbixClient(cmd)
 			handleError(err)
@@ -150,9 +156,10 @@ func newHostListCmd() *cobra.Command {
 
 func newHostShowCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "show [host name]",
-		Short: "Show details of a Zabbix host",
-		Args:  cobra.ExactArgs(1),
+		Use:     "show [host name]",
+		Aliases: []string{"show_host"},
+		Short:   "Show details of a Zabbix host",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			client, err := getZabbixClient(cmd)
 			handleError(err)
@@ -233,9 +240,10 @@ func newHostCreateCmd() *cobra.Command {
 	var ip string
 
 	cmd := &cobra.Command{
-		Use:   "create [host name]",
-		Short: "Create a new Zabbix host",
-		Args:  cobra.ExactArgs(1),
+		Use:     "create [host name]",
+		Aliases: []string{"create_host"},
+		Short:   "Create a new Zabbix host",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			client, err := getZabbixClient(cmd)
 			handleError(err)
@@ -263,14 +271,10 @@ func newHostCreateCmd() *cobra.Command {
 			var resp map[string]interface{}
 			json.Unmarshal(result, &resp)
 
-			format, _ := cmd.Flags().GetString("format")
-			if format == "json" {
-				outputResult(cmd, resp, nil, nil)
-				return
-			}
-
 			hostIDs := resp["hostids"].([]interface{})
-			fmt.Printf("Host created successfully with ID: %s\n", hostIDs[0])
+			headers := []string{"Host", "Group ID", "IP", "Action", "Status", "ID"}
+			rows := [][]string{{args[0], groupID, ip, "Create", "Success", fmt.Sprintf("%v", hostIDs[0])}}
+			outputResult(cmd, resp, headers, rows)
 		},
 	}
 
@@ -283,9 +287,10 @@ func newHostCreateCmd() *cobra.Command {
 
 func newHostDeleteCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "delete [host name]",
-		Short: "Delete a Zabbix host",
-		Args:  cobra.ExactArgs(1),
+		Use:     "delete [host name]",
+		Aliases: []string{"remove_host"},
+		Short:   "Delete a Zabbix host",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			client, err := getZabbixClient(cmd)
 			handleError(err)
@@ -311,10 +316,224 @@ func newHostDeleteCmd() *cobra.Command {
 			hostID := hosts[0]["hostid"].(string)
 
 			// Delete the host
-			_, err = client.Call("host.delete", []string{hostID})
+			resp, err := client.Call("host.delete", []string{hostID})
 			handleError(err)
 
-			fmt.Printf("Host %s (ID: %s) deleted successfully\n", args[0], hostID)
+			var deleteResp map[string]interface{}
+			json.Unmarshal(resp, &deleteResp)
+
+			headers := []string{"Host", "Action", "Status"}
+			rows := [][]string{{args[0], "Delete", "Success"}}
+			outputResult(cmd, deleteResp, headers, rows)
 		},
 	}
+}
+
+func newHostUpdateCmd() *cobra.Command {
+	var status string
+	var name string
+
+	cmd := &cobra.Command{
+		Use:     "update [host name]",
+		Aliases: []string{"update_host"},
+		Short:   "Update a Zabbix host",
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			client, err := getZabbixClient(cmd)
+			handleError(err)
+
+			// Find host ID
+			params := map[string]interface{}{
+				"filter": map[string]interface{}{"host": args[0]},
+			}
+			result, err := client.Call("host.get", params)
+			handleError(err)
+
+			var hosts []map[string]interface{}
+			json.Unmarshal(result, &hosts)
+			if len(hosts) == 0 {
+				fmt.Println("Host not found")
+				return
+			}
+			hostID := hosts[0]["hostid"].(string)
+
+			updateParams := map[string]interface{}{
+				"hostid": hostID,
+			}
+			if status != "" {
+				s := "0"
+				if status == "disable" || status == "off" || status == "1" {
+					s = "1"
+				}
+				updateParams["status"] = s
+			}
+			if name != "" {
+				updateParams["name"] = name
+			}
+
+			resp, err := client.Call("host.update", updateParams)
+			handleError(err)
+
+			var updateResp map[string]interface{}
+			json.Unmarshal(resp, &updateResp)
+
+			headers := []string{"Host", "Action", "Status"}
+			rows := [][]string{{args[0], "Update", "Success"}}
+			outputResult(cmd, updateResp, headers, rows)
+		},
+	}
+
+	cmd.Flags().StringVarP(&status, "status", "s", "", "Set host status (enable/disable)")
+	cmd.Flags().StringVarP(&name, "name", "n", "", "Set new host visible name")
+
+	return cmd
+}
+
+func newHostEnableCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "enable [host name]",
+		Aliases: []string{"enable_host"},
+		Short:   "Enable a Zabbix host",
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			client, err := getZabbixClient(cmd)
+			handleError(err)
+
+			params := map[string]interface{}{
+				"filter": map[string]interface{}{"host": args[0]},
+			}
+			result, err := client.Call("host.get", params)
+			handleError(err)
+
+			var hosts []map[string]interface{}
+			json.Unmarshal(result, &hosts)
+			if len(hosts) == 0 {
+				fmt.Println("Host not found")
+				return
+			}
+
+			resp, err := client.Call("host.update", map[string]interface{}{
+				"hostid": hosts[0]["hostid"],
+				"status": "0",
+			})
+			handleError(err)
+
+			var updateResp map[string]interface{}
+			json.Unmarshal(resp, &updateResp)
+
+			headers := []string{"Host", "Status", "Action"}
+			rows := [][]string{{args[0], "Enabled", "Success"}}
+			outputResult(cmd, updateResp, headers, rows)
+		},
+	}
+}
+
+func newHostDisableCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "disable [host name]",
+		Aliases: []string{"disable_host"},
+		Short:   "Disable a Zabbix host",
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			client, err := getZabbixClient(cmd)
+			handleError(err)
+
+			params := map[string]interface{}{
+				"filter": map[string]interface{}{"host": args[0]},
+			}
+			result, err := client.Call("host.get", params)
+			handleError(err)
+
+			var hosts []map[string]interface{}
+			json.Unmarshal(result, &hosts)
+			if len(hosts) == 0 {
+				fmt.Println("Host not found")
+				return
+			}
+
+			resp, err := client.Call("host.update", map[string]interface{}{
+				"hostid": hosts[0]["hostid"],
+				"status": "1",
+			})
+			handleError(err)
+
+			var updateResp map[string]interface{}
+			json.Unmarshal(resp, &updateResp)
+
+			headers := []string{"Host", "Status", "Action"}
+			rows := [][]string{{args[0], "Disabled", "Success"}}
+			outputResult(cmd, updateResp, headers, rows)
+		},
+	}
+}
+
+func newHostCloneCmd() *cobra.Command {
+	var newName string
+	cmd := &cobra.Command{
+		Use:     "clone [source host name]",
+		Aliases: []string{"clone_host"},
+		Short:   "Clone a Zabbix host",
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			client, err := getZabbixClient(cmd)
+			handleError(err)
+
+			// Get source host full details
+			params := map[string]interface{}{
+				"filter":           map[string]interface{}{"host": args[0]},
+				"selectGroups":     "extend",
+				"selectInterfaces": "extend",
+				"selectTemplates":  "extend",
+				"selectMacros":     "extend",
+			}
+			result, err := client.Call("host.get", params)
+			handleError(err)
+
+			var hosts []map[string]interface{}
+			json.Unmarshal(result, &hosts)
+			if len(hosts) == 0 {
+				fmt.Println("Source host not found")
+				return
+			}
+			src := hosts[0]
+
+			if newName == "" {
+				newName = fmt.Sprintf("%s_CLONE", src["host"])
+			}
+
+			// Prepare clone params
+			cloneParams := map[string]interface{}{
+				"host":       newName,
+				"name":       newName,
+				"status":     src["status"],
+				"groups":     src["groups"],
+				"templates":  src["templates"],
+				"interfaces": src["interfaces"],
+				"macros":     src["macros"],
+			}
+
+			// Remove read-only or internal fields from select result
+			if interfaces, ok := cloneParams["interfaces"].([]interface{}); ok {
+				for _, iface := range interfaces {
+					if m, ok := iface.(map[string]interface{}); ok {
+						delete(m, "interfaceid")
+						delete(m, "hostid")
+					}
+				}
+			}
+
+			resp, err := client.Call("host.create", cloneParams)
+			handleError(err)
+
+			var createResp map[string]interface{}
+			json.Unmarshal(resp, &createResp)
+
+			headers := []string{"Source Host", "Cloned Host", "Action", "Status"}
+			rows := [][]string{{args[0], newName, "Clone", "Success"}}
+			outputResult(cmd, createResp, headers, rows)
+		},
+	}
+}
+	cmd.Flags().StringVarP(&newName, "new-name", "n", "", "New name for the cloned host")
+	return cmd
 }

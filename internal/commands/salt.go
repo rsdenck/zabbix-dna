@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"fmt"
@@ -39,15 +39,6 @@ func newSaltPingCmd() *cobra.Command {
 
 			jid := client.GetJid()
 
-			headers := []string{"Property", "Value"}
-			rows := [][]string{
-				{"Target", target},
-				{"Target Type", targetType},
-				{"JID", jid},
-				{"Command", "test.ping"},
-			}
-			outputResult(cmd, nil, headers, rows)
-
 			err = client.SendCommand(jid, target, targetType, "test.ping")
 			if err != nil {
 				if strings.Contains(err.Error(), "root_key") {
@@ -58,7 +49,17 @@ func newSaltPingCmd() *cobra.Command {
 				return
 			}
 
-			fmt.Println("\nCommand published successfully. Check Salt events for returns.")
+			headers := []string{"Target", "JID", "Command", "Status"}
+			rows := [][]string{
+				{target, jid, "test.ping", "Published Successfully"},
+			}
+			resp := map[string]string{
+				"target": target,
+				"jid":    jid,
+				"module": "test.ping",
+				"status": "success",
+			}
+			outputResult(cmd, resp, headers, rows)
 		},
 	}
 
@@ -86,15 +87,6 @@ func newSaltRunCmd() *cobra.Command {
 
 			jid := client.GetJid()
 
-			headers := []string{"Property", "Value"}
-			rows := [][]string{
-				{"Target", target},
-				{"Target Type", targetType},
-				{"JID", jid},
-				{"Module", module},
-			}
-			outputResult(cmd, nil, headers, rows)
-
 			err = client.SendCommand(jid, target, targetType, module)
 			if err != nil {
 				if strings.Contains(err.Error(), "root_key") {
@@ -105,7 +97,17 @@ func newSaltRunCmd() *cobra.Command {
 				return
 			}
 
-			fmt.Println("\nCommand published successfully. Check Salt events for returns.")
+			headers := []string{"Target", "JID", "Module", "Status"}
+			rows := [][]string{
+				{target, jid, module, "Published Successfully"},
+			}
+			resp := map[string]string{
+				"target": target,
+				"jid":    jid,
+				"module": module,
+				"status": "success",
+			}
+			outputResult(cmd, resp, headers, rows)
 		},
 	}
 

@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -36,15 +36,23 @@ func newMediaTypeListCmd() *cobra.Command {
 			var types []map[string]interface{}
 			json.Unmarshal(result, &types)
 
-			fmt.Printf("%-10s %-30s %-15s %-10s\n", "ID", "Name", "Type", "Status")
+			headers := []string{"ID", "Name", "Type", "Status"}
+			var rows [][]string
 			for _, t := range types {
 				mType := getMediaTypeName(t["type"].(string))
 				status := "Enabled"
 				if t["status"].(string) == "1" {
 					status = "Disabled"
 				}
-				fmt.Printf("%-10s %-30s %-15s %-10s\n", t["mediatypeid"], t["name"], mType, status)
+				rows = append(rows, []string{
+					fmt.Sprintf("%v", t["mediatypeid"]),
+					fmt.Sprintf("%v", t["name"]),
+					mType,
+					status,
+				})
 			}
+
+			outputResult(cmd, types, headers, rows)
 		},
 	}
 

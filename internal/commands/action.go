@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -39,15 +39,23 @@ func newActionListCmd() *cobra.Command {
 			var actions []map[string]interface{}
 			json.Unmarshal(result, &actions)
 
-			fmt.Printf("%-10s %-40s %-15s %-10s\n", "ID", "Name", "Source", "Status")
+			headers := []string{"ID", "Name", "Source", "Status"}
+			var rows [][]string
 			for _, a := range actions {
 				source := getEventSourceName(a["eventsource"].(string))
 				status := "Enabled"
 				if a["status"].(string) == "1" {
 					status = "Disabled"
 				}
-				fmt.Printf("%-10s %-40s %-15s %-10s\n", a["actionid"], a["name"], source, status)
+				rows = append(rows, []string{
+					fmt.Sprintf("%v", a["actionid"]),
+					fmt.Sprintf("%v", a["name"]),
+					source,
+					status,
+				})
 			}
+
+			outputResult(cmd, actions, headers, rows)
 		},
 	}
 

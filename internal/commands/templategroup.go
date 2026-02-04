@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -86,7 +86,9 @@ func newTemplateGroupCreateCmd() *cobra.Command {
 			json.Unmarshal(result, &resp)
 			groupIDs := resp["groupids"].([]interface{})
 
-			fmt.Printf("Template group created successfully with ID: %s\n", groupIDs[0])
+			headers := []string{"Template Group", "Action", "Status", "ID"}
+			rows := [][]string{{args[0], "Create", "Success", fmt.Sprintf("%v", groupIDs[0])}}
+			outputResult(cmd, resp, headers, rows)
 		},
 	}
 }
@@ -121,10 +123,15 @@ func newTemplateGroupDeleteCmd() *cobra.Command {
 			groupID := groups[0]["groupid"].(string)
 
 			// Delete the group
-			_, err = client.Call("templategroup.delete", []string{groupID})
+			resp, err := client.Call("templategroup.delete", []string{groupID})
 			handleError(err)
 
-			fmt.Printf("Template group %s (ID: %s) deleted successfully\n", args[0], groupID)
+			var deleteResp map[string]interface{}
+			json.Unmarshal(resp, &deleteResp)
+
+			headers := []string{"Template Group", "Action", "Status"}
+			rows := [][]string{{args[0], "Delete", "Success"}}
+			outputResult(cmd, deleteResp, headers, rows)
 		},
 	}
 }

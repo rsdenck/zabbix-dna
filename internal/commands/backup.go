@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -83,8 +83,6 @@ func newBackupCmd() *cobra.Command {
 				fmt.Printf("Failed to save backup file: %v\n", err)
 				return
 			}
-
-			fmt.Printf("Backup completed successfully: %s\n", filename)
 
 			headers := []string{"Component", "Status"}
 			rows := [][]string{

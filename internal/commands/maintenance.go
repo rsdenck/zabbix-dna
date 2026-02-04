@@ -1,4 +1,4 @@
-package commands
+﻿package commands
 
 import (
 	"encoding/json"
@@ -107,9 +107,12 @@ func newMaintenanceCreateCmd() *cobra.Command {
 			json.Unmarshal(result, &resp)
 			maintenanceIDs := resp["maintenanceids"].([]interface{})
 
-			fmt.Printf("Maintenance period created successfully with ID: %s\n", maintenanceIDs[0])
+			headers := []string{"Maintenance", "Action", "Status", "ID"}
+			rows := [][]string{{args[0], "Create", "Success", fmt.Sprintf("%v", maintenanceIDs[0])}}
+			outputResult(cmd, resp, headers, rows)
 		},
 	}
+}
 
 	cmd.Flags().StringVarP(&hostID, "hostid", "H", "", "Host ID for maintenance")
 	cmd.Flags().StringVarP(&groupID, "groupid", "g", "", "Host group ID for maintenance")
@@ -151,10 +154,15 @@ func newMaintenanceDeleteCmd() *cobra.Command {
 			maintenanceID := periods[0]["maintenanceid"].(string)
 
 			// Delete the period
-			_, err = client.Call("maintenance.delete", []string{maintenanceID})
+			result, err = client.Call("maintenance.delete", []string{maintenanceID})
 			handleError(err)
 
-			fmt.Printf("Maintenance period %s (ID: %s) deleted successfully\n", args[0], maintenanceID)
+			var resp map[string]interface{}
+			json.Unmarshal(result, &resp)
+
+			headers := []string{"Maintenance", "Action", "Status", "ID"}
+			rows := [][]string{{args[0], "Delete", "Success", maintenanceID}}
+			outputResult(cmd, resp, headers, rows)
 		},
 	}
 }
