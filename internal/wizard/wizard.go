@@ -85,10 +85,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	if m.done {
-		return "\n  ConfiguraÃ§Ã£o salva com sucesso!\n\n"
+		return "\n  Configuração salva com sucesso!\n\n"
 	}
 
-	s := "\n" + titleStyle.Render("WIZARD DE CONFIGURAÃ‡ÃƒO ZABBIX-DNA") + "\n\n"
+	s := "\n" + titleStyle.Render("WIZARD DE CONFIGURAÇÃO ZABBIX-DNA") + "\n\n"
 
 	for i := range m.inputs {
 		s += fmt.Sprintf(
@@ -98,7 +98,7 @@ func (m model) View() string {
 		)
 	}
 
-	s += "\n  (enter para prÃ³ximo, esc para sair)\n"
+	s += "\n  (enter para próximo, esc para sair)\n"
 
 	return s
 }
@@ -125,12 +125,12 @@ func Start() error {
 	inputs[2].Width = 50
 
 	inputs[3] = textinput.New()
-	inputs[3].Placeholder = "Caminho do arquivo de configuraÃ§Ã£o (default: zabbix-dna.toml)"
+	inputs[3].Placeholder = "Caminho do arquivo de configuração (default: zabbix-dna.toml)"
 	inputs[3].CharLimit = 100
 	inputs[3].Width = 50
 
 	inputs[4] = textinput.New()
-	inputs[4].Placeholder = "NÃ­vel de Log (debug, info, warn, error)"
+	inputs[4].Placeholder = "Nível de Log (debug, info, warn, error)"
 	inputs[4].CharLimit = 20
 	inputs[4].Width = 20
 
@@ -182,6 +182,6 @@ func Start() error {
 		return fmt.Errorf("erro ao salvar arquivo: %w", err)
 	}
 
-	fmt.Printf("\nConfiguraÃ§Ã£o salva com sucesso em: %s\n", configPath)
+	fmt.Printf("\nConfiguração salva com sucesso em: %s\n", configPath)
 	return nil
 }

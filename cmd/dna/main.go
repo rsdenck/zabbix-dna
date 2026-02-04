@@ -21,7 +21,7 @@ var (
 
 	bannerStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#D20000")).
+			Background(lipgloss.Color("#0052cc")).
 			Padding(1, 2).
 			Bold(true).
 			MarginBottom(1)
@@ -42,8 +42,8 @@ written 100% in Go with a focus on observability and automation.`,
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				fmt.Println(bannerStyle.Render(fmt.Sprintf("ZABBIX-DNA CLI | %s", version)))
 				choice, _ := tui.Start()
+				fmt.Printf("\n%s\n", bannerStyle.Render(fmt.Sprintf("ZABBIX-DNA CLI | %s", version)))
 				if choice != "" {
 					fmt.Printf("\n> Executando: %s\n\n", choice)
 					args := strings.Fields(choice)
