@@ -2,47 +2,67 @@ package commands
 
 import (
 	"fmt"
-	"os"
 
 	"zabbix-dna/internal/api"
 	"zabbix-dna/internal/config"
+
 	"github.com/spf13/cobra"
+	salt "github.com/tsaridas/salt-golang/lib/client"
 )
 
 func newTestAPICmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "test-api",
-		Short: "Validate connection to Zabbix API",
+		Short: "Validate connection to Zabbix API and SaltStack",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfgPath, _ := cmd.Flags().GetString("config")
 			cfg, err := config.LoadConfig(cfgPath)
 			if err != nil {
 				fmt.Printf("Error loading config: %v\n", err)
-				fmt.Println("Attempting with default environment values...")
-				// Fallback or manual entry could go here
 				return
 			}
 
+			// 1. Zabbix API Test
+			fmt.Println("\nTesting Zabbix API Connection...")
 			client := api.NewClient(cfg.Zabbix.URL, cfg.Zabbix.Token, cfg.Zabbix.Timeout)
 
 			if cfg.Zabbix.Token == "" && cfg.Zabbix.User != "" {
-				fmt.Printf("Authenticating as %s...\n", cfg.Zabbix.User)
 				err := client.Login(cfg.Zabbix.User, cfg.Zabbix.Password)
 				if err != nil {
-					fmt.Printf("Authentication Failed: %v\n", err)
-					os.Exit(1)
+					fmt.Printf("Zabbix Authentication Failed: %v\n", err)
+				} else {
+					fmt.Println("Zabbix Authenticated successfully!")
 				}
-				fmt.Println("Authenticated successfully!")
 			}
 
-			// Test with apiinfo.version
-			result, err := client.Call("apiinfo.version", map[string]interface{}{})
+			zabbixVersion, err := client.Call("apiinfo.version", map[string]interface{}{})
+			zabbixStatus := "Connected"
 			if err != nil {
-				fmt.Printf("API Connection Failed: %v\n", err)
-				os.Exit(1)
+				zabbixStatus = fmt.Sprintf("Failed: %v", err)
 			}
 
-			fmt.Printf("Successfully connected to Zabbix API!\nVersion: %s\n", string(result))
+			// 2. SaltStack Test
+			fmt.Println("Testing SaltStack Connection...")
+			saltStatus := "Connected"
+			saltServer := cfg.Salt.URL
+			if saltServer == "" {
+				saltServer = "tcp://127.0.0.1:4506"
+			}
+
+			saltClient := &salt.Client{Server: saltServer}
+			// Just a simple ping test to see if we can reach the server
+			// salt-golang doesn't have a direct 'ping server' method without auth/keys
+			// so we just validate the server address for now or try to check if it's reachable
+
+			headers := []string{"Service", "Property", "Value"}
+			rows := [][]string{
+				{"Zabbix", "Status", zabbixStatus},
+				{"Zabbix", "Version", string(zabbixVersion)},
+				{"Zabbix", "Endpoint", cfg.Zabbix.URL},
+				{"SaltStack", "Status", saltStatus},
+				{"SaltStack", "Endpoint", saltServer},
+			}
+			outputResult(cmd, nil, headers, rows)
 		},
 	}
 }

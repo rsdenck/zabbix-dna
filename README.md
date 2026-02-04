@@ -14,6 +14,8 @@
 ## **ZABBIX-DNA**
 O **ZABBIX-DNA** é o propósito central deste ecossistema: uma plataforma CLI de classe enterprise escrita 100% em Go, focada em performance extrema e observabilidade moderna.
 
+![Zabbix DNA](doc/zabbix-dna.png)
+
 ### **Propósito Estratégico**
 - **Performance Nativa**: Arquitetura em Go para processamento massivo de dados sem overhead.
 - **Eliminação de Ruído**: Transformar milhares de itens em traces acionáveis via OTLP.
@@ -21,6 +23,8 @@ O **ZABBIX-DNA** é o propósito central deste ecossistema: uma plataforma CLI d
 - **Observabilidade First**: Integração nativa com o stack OpenTelemetry.
 
 ---
+
+![Configuração Zabbix DNA](doc/zabbix-dna-config.png)
 
 ## **Guia de Início Rápido (Linux Only)**
 
@@ -51,6 +55,12 @@ timeout = 30
 endpoint = "http://otel-collector:4318"
 protocol = "http"
 service_name = "zabbix-dna"
+
+[salt]
+url = "tcp://127.0.0.1:4506"
+user = "saltuser"
+password = "password"
+eauth = "pam"
 ```
 
 ---
@@ -74,6 +84,13 @@ Listagem de hosts, templates e proxies:
 zabbix-dna host list
 zabbix-dna template list
 zabbix-dna proxy list
+```
+
+### **Integração SaltStack**
+Administração de Zabbix Proxies e infraestrutura via SaltStack:
+```bash
+zabbix-dna salt ping --target '*'
+zabbix-dna salt run pkg.install --target 'proxy-01' zabbix-agent2
 ```
 
 Execução de backups de configuração:

@@ -3,6 +3,7 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -51,6 +52,21 @@ func newHostListCmd() *cobra.Command {
 			var hosts []map[string]interface{}
 			json.Unmarshal(result, &hosts)
 
+			// Fetch proxies to resolve names
+			proxyResult, err := client.Call("proxy.get", map[string]interface{}{
+				"output": []string{"proxyid", "name"},
+			})
+			var proxies []map[string]interface{}
+			if err == nil {
+				json.Unmarshal(proxyResult, &proxies)
+			}
+			proxyMap := make(map[string]string)
+			for _, p := range proxies {
+				id := fmt.Sprintf("%v", p["proxyid"])
+				name := fmt.Sprintf("%v", p["name"])
+				proxyMap[id] = name
+			}
+
 			headers := []string{"HostID", "Name", "Host groups", "Templates", "Zabbix agent", "Maintenance", "Status", "Proxy"}
 			var rows [][]string
 
@@ -67,13 +83,7 @@ func newHostListCmd() *cobra.Command {
 						}
 					}
 				}
-				groupsStr := ""
-				if len(groups) > 0 {
-					groupsStr = groups[0]
-					if len(groups) > 1 {
-						groupsStr += fmt.Sprintf(" (+%d)", len(groups)-1)
-					}
-				}
+				groupsStr := strings.Join(groups, ", ")
 
 				// Templates
 				var templates []string
@@ -84,13 +94,7 @@ func newHostListCmd() *cobra.Command {
 						}
 					}
 				}
-				templatesStr := ""
-				if len(templates) > 0 {
-					templatesStr = templates[0]
-					if len(templates) > 1 {
-						templatesStr += fmt.Sprintf(" (+%d)", len(templates)-1)
-					}
-				}
+				templatesStr := strings.Join(templates, ", ")
 
 				// Agent availability
 				agentStatus := "Unknown"
@@ -122,12 +126,16 @@ func newHostListCmd() *cobra.Command {
 				}
 
 				// Proxy
-				proxy := "None"
+				proxyName := "None"
 				if pID, ok := h["proxy_hostid"].(string); ok && pID != "0" {
-					proxy = pID // Would need another call to get name, for now ID
+					if name, ok := proxyMap[pID]; ok {
+						proxyName = name
+					} else {
+						proxyName = pID
+					}
 				}
 
-				rows = append(rows, []string{hostID, name, groupsStr, templatesStr, agentStatus, maintenance, status, proxy})
+				rows = append(rows, []string{hostID, name, groupsStr, templatesStr, agentStatus, maintenance, status, proxyName})
 			}
 
 			outputResult(cmd, hosts, headers, rows)

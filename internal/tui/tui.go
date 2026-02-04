@@ -151,6 +151,8 @@ func Start() (string, error) {
 	items := []list.Item{
 		item{title: "host list", desc: "Listar todos os hosts"},
 		item{title: "proxy list", desc: "Listar todos os proxies"},
+		item{title: "salt ping", desc: "Pingar minions (proxies) via SaltStack"},
+		item{title: "salt run", desc: "Executar módulo em minions via SaltStack"},
 		item{title: "template list", desc: "Listar todos os templates"},
 		item{title: "hostgroup list", desc: "Listar todos os grupos de hosts"},
 		item{title: "backup", desc: "Realizar backup das configurações"},

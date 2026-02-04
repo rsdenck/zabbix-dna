@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Zabbix   ZabbixConfig `toml:"zabbix"`
 	OTLP     OTLPConfig   `toml:"otlp"`
+	Salt     SaltConfig   `toml:"salt"`
 	LogLevel string       `toml:"log_level"`
 }
 
@@ -19,6 +20,13 @@ type ZabbixConfig struct {
 	User     string `toml:"user"`
 	Password string `toml:"password"`
 	Timeout  int    `toml:"timeout"`
+}
+
+type SaltConfig struct {
+	URL      string `toml:"url"`
+	User     string `toml:"user"`
+	Password string `toml:"password"`
+	EAuth    string `toml:"eauth"`
 }
 
 type OTLPConfig struct {

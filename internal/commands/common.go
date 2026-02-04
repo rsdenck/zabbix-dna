@@ -8,8 +8,20 @@ import (
 	"zabbix-dna/internal/api"
 	"zabbix-dna/internal/config"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+)
+
+var (
+	headerStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FFFFFF")).
+			Background(lipgloss.Color("#D20000")).
+			Padding(0, 1).
+			Bold(true)
+
+	borderStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#D20000"))
 )
 
 type JSONResponse struct {
@@ -35,21 +47,37 @@ func outputResult(cmd *cobra.Command, result interface{}, headers []string, rows
 
 	// Default to table format
 	table := tablewriter.NewWriter(os.Stdout)
+
+	// Custom table style to match images
 	table.SetHeader(headers)
 	table.SetAutoWrapText(false)
 	table.SetAutoFormatHeaders(true)
 	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("|")
-	table.SetColumnSeparator("|")
-	table.SetRowSeparator("-")
+
+	// Image-like styling
+	table.SetCenterSeparator("┼")
+	table.SetColumnSeparator("│")
+	table.SetRowSeparator("─")
+
 	table.SetHeaderLine(true)
 	table.SetBorder(true)
-	table.SetTablePadding("\t") // pad with tabs
+	table.SetTablePadding("  ")
 	table.SetNoWhiteSpace(false)
+
+	// Apply colors to header if terminal supports it
+	table.SetHeaderColor(getHeaderColors(len(headers))...)
 
 	table.AppendBulk(rows)
 	table.Render()
+}
+
+func getHeaderColors(count int) []tablewriter.Colors {
+	colors := make([]tablewriter.Colors, count)
+	for i := range colors {
+		colors[i] = tablewriter.Colors{tablewriter.Bold, tablewriter.FgHiWhiteColor, tablewriter.BgRedColor}
+	}
+	return colors
 }
 
 func getZabbixClient(cmd *cobra.Command) (*api.ZabbixClient, error) {
