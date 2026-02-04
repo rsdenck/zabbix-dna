@@ -26,7 +26,7 @@ O **ZABBIX-DNA** é o propósito central deste ecossistema: uma plataforma CLI d
 
 ### **Instalação Via Script**
 ```bash
-curl -sSL https://raw.githubusercontent.com/rsdenck/zabbix-dna/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/rsdenck/zabbix-dna/main/dna.sh | bash
 ```
 
 ### **Compilação Manual**

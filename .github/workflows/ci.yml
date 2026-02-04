@@ -34,11 +34,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        goos: [linux, windows, darwin]
+        goos: [linux]
         goarch: [amd64, arm64]
-        exclude:
-          - goos: windows
-            goarch: arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -53,9 +50,6 @@ jobs:
         run: |
           mkdir -p dist
           BINARY_NAME=zabbix-dna
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            BINARY_NAME="${BINARY_NAME}.exe"
-          fi
           OUTPUT_NAME="${BINARY_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}"
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o "dist/${OUTPUT_NAME}" ./cmd/dna/main.go
           echo "ASSET_NAME=${OUTPUT_NAME}" >> $GITHUB_ENV
