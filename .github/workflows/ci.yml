@@ -2,7 +2,7 @@ name: Enterprise CI/CD Pipeline
 
 # @description Pipeline de CI/CD robusto para o ecossistema zabbix-dna.
 # @author Ranlens Denck (Senior DevOps Engineer)
-# @version 3.1.0
+# @version 3.1.1
 # @targets Linux Only (amd64, arm64)
 # @toolchain Go stable (Ensuring compatibility)
 
@@ -36,6 +36,7 @@ jobs:
 
       - name: Verify Dependencies
         run: |
+          go mod tidy
           go mod verify
           go mod download
 
