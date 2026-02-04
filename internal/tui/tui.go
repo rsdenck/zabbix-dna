@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -9,21 +10,83 @@ import (
 )
 
 var (
-	zabbixRed   = lipgloss.Color("#D20000")
-	zabbixBlack = lipgloss.Color("#000000")
-	zabbixWhite = lipgloss.Color("#FFFFFF")
+	zabbixRed    = lipgloss.Color("#d64e4e")
+	zabbixDark   = lipgloss.Color("#1a1a1a")
+	zabbixGray   = lipgloss.Color("#333333")
+	zabbixWhite  = lipgloss.Color("#FFFFFF")
+	glassOverlay = lipgloss.Color("#2a2a2a")
+
+	// Glassmorphism Styles
+	windowStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(zabbixRed).
+			Padding(1, 2).
+			Background(zabbixDark)
+
+	headerStyle = lipgloss.NewStyle().
+			Foreground(zabbixRed).
+			Bold(true).
+			MarginBottom(1)
+
+	asciiArt = `  ███████╗ █████╗ ██████╗ ██████╗ ██╗██╗  ██╗    ██████╗██╗     ██╗ 
+  ╚══███╔╝██╔══██╗██╔══██╗██╔══██╗██║╚██╗██╔╝    ██╔════╝██║     ██║ 
+    ███╔╝ ███████║██████╔╝██████╔╝██║ ╚███╔╝     ██║     ██║     ██║ 
+   ███╔╝  ██╔══██║██╔══██╗██╔══██╗██║ ██╔██╗     ██║     ██║     ██║ 
+  ███████╗██║  ██║██████╔╝██████╔╝██║██╔╝ ██╗    ╚██████╗███████╗██║ 
+  ╚══════╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚═╝╚═╝  ╚═╝     ╚═════╝╚══════╝╚═╝ v6.4`
+
+	asciiStyle = lipgloss.NewStyle().Foreground(zabbixRed).MarginBottom(1)
 
 	titleStyle = lipgloss.NewStyle().
 			Foreground(zabbixWhite).
 			Background(zabbixRed).
 			Padding(0, 1).
-			Bold(true)
+			Bold(true).
+			MarginBottom(1)
 
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
-	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(zabbixRed)
-	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
+	itemStyle = lipgloss.NewStyle().
+			PaddingLeft(2).
+			Foreground(zabbixWhite)
+
+	selectedItemStyle = lipgloss.NewStyle().
+				PaddingLeft(0).
+				Foreground(zabbixRed).
+				Bold(true).
+				SetString("  > ")
+
+	descStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#888888")).
+			Italic(true).
+			PaddingLeft(4)
+
+	paginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	helpStyle       = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 )
+
+type itemDelegate struct{}
+
+func (d itemDelegate) Height() int                               { return 2 }
+func (d itemDelegate) Spacing() int                              { return 0 }
+func (d itemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd { return nil }
+func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
+	i, ok := listItem.(item)
+	if !ok {
+		return
+	}
+
+	str := fmt.Sprintf("%s", i.title)
+
+	var title, desc string
+	if index == m.Index() {
+		title = selectedItemStyle.Render(str)
+		desc = descStyle.Foreground(lipgloss.Color("#aaaaaa")).Render(i.desc)
+	} else {
+		title = itemStyle.Render(str)
+		desc = descStyle.Render(i.desc)
+	}
+
+	fmt.Fprintf(w, "%s\n%s", title, desc)
+}
 
 type item struct {
 	title, desc string
@@ -74,9 +137,14 @@ func (m model) View() string {
 		return fmt.Sprintf("\n  Executando: %s\n\n", m.choice)
 	}
 	if m.quitting {
-		return "\n  AtÃ© logo!\n\n"
+		return "\n  Até logo!\n\n"
 	}
-	return "\n" + m.list.View()
+
+	header := asciiStyle.Render(asciiArt)
+	content := m.list.View()
+
+	// Wrap everything in a glassmorphism window
+	return windowStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, content))
 }
 
 func Start() (string, error) {
@@ -85,15 +153,16 @@ func Start() (string, error) {
 		item{title: "proxy list", desc: "Listar todos os proxies"},
 		item{title: "template list", desc: "Listar todos os templates"},
 		item{title: "hostgroup list", desc: "Listar todos os grupos de hosts"},
-		item{title: "backup", desc: "Realizar backup das configuraÃ§Ãµes"},
-		item{title: "exporter metrics", desc: "Iniciar exportador de mÃ©tricas OTLP"},
+		item{title: "backup", desc: "Realizar backup das configurações"},
+		item{title: "exporter metrics", desc: "Iniciar exportador de métricas OTLP"},
 		item{title: "exporter traces", desc: "Iniciar exportador de traces OTLP"},
-		item{title: "wizard", desc: "Abrir assistente de configuraÃ§Ã£o"},
+		item{title: "wizard", desc: "Abrir assistente de configuração"},
 	}
 
-	const defaultWidth = 20
+	const defaultWidth = 60
+	const defaultHeight = 20
 
-	l := list.New(items, list.NewDefaultDelegate(), defaultWidth, 14)
+	l := list.New(items, itemDelegate{}, defaultWidth, defaultHeight)
 	l.Title = "ZABBIX-DNA CLI"
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
