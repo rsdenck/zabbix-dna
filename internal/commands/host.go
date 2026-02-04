@@ -426,8 +426,6 @@ func newHostEnableCmd() *cobra.Command {
 			outputResult(cmd, updateResp, headers, rows)
 		},
 	}
-
-	return cmd
 }
 
 func newHostDisableCmd() *cobra.Command {

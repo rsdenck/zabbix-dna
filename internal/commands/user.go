@@ -287,17 +287,19 @@ func newUserEnableCmd() *cobra.Command {
 			}
 			user := users[0]
 			var lastResp map[string]interface{}
-			for _, g := range groups {
-				group := g.(map[string]interface{})
-				groupID := group["usrgrpid"].(string)
+			if groups, ok := user["usrgrps"].([]interface{}); ok {
+				for _, g := range groups {
+					group := g.(map[string]interface{})
+					groupID := group["usrgrpid"].(string)
 
-				// Enable user group (status 0 = enabled)
-				resp, err := client.Call("usergroup.update", map[string]interface{}{
-					"usrgrpid":     groupID,
-					"users_status": "0",
-				})
-				handleError(err)
-				json.Unmarshal(resp, &lastResp)
+					// Enable user group (status 0 = enabled)
+					resp, err := client.Call("usergroup.update", map[string]interface{}{
+						"usrgrpid":     groupID,
+						"users_status": "0",
+					})
+					handleError(err)
+					json.Unmarshal(resp, &lastResp)
+				}
 			}
 
 			headers := []string{"Username", "Action", "Status", "Note"}
@@ -331,17 +333,19 @@ func newUserDisableCmd() *cobra.Command {
 			}
 			user := users[0]
 			var lastResp map[string]interface{}
-			for _, g := range groups {
-				group := g.(map[string]interface{})
-				groupID := group["usrgrpid"].(string)
+			if groups, ok := user["usrgrps"].([]interface{}); ok {
+				for _, g := range groups {
+					group := g.(map[string]interface{})
+					groupID := group["usrgrpid"].(string)
 
-				// Disable user group (status 1 = disabled)
-				resp, err := client.Call("usergroup.update", map[string]interface{}{
-					"usrgrpid":     groupID,
-					"users_status": "1",
-				})
-				handleError(err)
-				json.Unmarshal(resp, &lastResp)
+					// Disable user group (status 1 = disabled)
+					resp, err := client.Call("usergroup.update", map[string]interface{}{
+						"usrgrpid":     groupID,
+						"users_status": "1",
+					})
+					handleError(err)
+					json.Unmarshal(resp, &lastResp)
+				}
 			}
 
 			headers := []string{"Username", "Action", "Status", "Note"}
