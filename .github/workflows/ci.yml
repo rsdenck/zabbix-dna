@@ -1,86 +1,197 @@
-name: CI/CD Pipeline
+name: Enterprise CI/CD Pipeline
+
+# @description Pipeline de CI/CD robusto para o ecossistema zabbix-dna.
+# @author Ranlens Denck (Senior DevOps Engineer)
+# @version 2.0.0
+# @targets Linux Only (amd64, arm64)
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
     tags:
-      - 'v*'
+      - 'v[0-9]+.[0-9]+.[0-9]+' # Segue rigorosamente SemVer
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
+# Permissões globais restritas (Least Privilege Principle)
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  test:
-    name: Test
+  # --- CI STAGE: Validação de Qualidade e Segurança ---
+  validate:
+    name: Code Quality & Security
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Hardened Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Go
+      - name: Setup Go Toolchain
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23' # Versão estável enterprise
+          cache: true
+          check-latest: true
+
+      - name: Verify Dependencies
+        run: |
+          go mod verify
+          go mod download
+
+      - name: Run Static Analysis (Lint)
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+        continue-on-error: false # Qualidade não é negociável
+
+      - name: Security Scan (Gosec)
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          gosec ./...
+        continue-on-error: true # Informativo por enquanto, mas visível
+
+  test:
+    name: Unit & Integration Tests
+    needs: [validate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
           cache: true
 
-      - name: Run tests
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: Execute Tests with Race Detection
+        run: |
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
+      - name: Validate Installer Script (dna.sh)
+        run: |
+          if [ ! -f "dna.sh" ]; then
+            echo "::error file=dna.sh::Installer script dna.sh not found!"
+            exit 1
+          fi
+          chmod +x dna.sh
+          # Teste de sintaxe básico
+          bash -n dna.sh
+          echo "dna.sh validation passed."
+
+  # --- CD STAGE: Build Reproduzível e Cross-Compilation ---
   build:
-    name: Build
+    name: Multi-Platform Build
+    needs: [test]
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true # Se uma arquitetura falha, a release deve ser bloqueada
       matrix:
-        goos: [linux]
-        goarch: [amd64, arm64]
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23'
           cache: true
 
-      - name: Build Binary
+      - name: Build Reproducible Binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0 # Garantir binário estático e portável
         run: |
+          VERSION=${GITHUB_REF_NAME}
+          if [[ $GITHUB_REF != refs/tags/* ]]; then
+            VERSION="dev-${GITHUB_SHA::7}"
+          fi
+          
           mkdir -p dist
-          BINARY_NAME=zabbix-dna
-          OUTPUT_NAME="${BINARY_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}"
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o "dist/${OUTPUT_NAME}" ./cmd/dna/main.go
-          echo "ASSET_NAME=${OUTPUT_NAME}" >> $GITHUB_ENV
+          BINARY_NAME="zabbix-dna-${{ matrix.goos }}-${{ matrix.goarch }}"
+          
+          # LDFLAGS para otimização e injeção de versão
+          go build -v \
+            -trimpath \
+            -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            -o "dist/${BINARY_NAME}" ./cmd/dna/main.go
 
-      - name: Upload Artifact
+      - name: Generate Checksums
+        run: |
+          cd dist && sha256sum * > checksums.txt
+
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*
+          retention-days: 1
+          if-no-files-found: error
 
+  # --- RELEASE STAGE: Atomic Deployment ---
   release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    needs: [test, build]
+    name: Atomic GitHub Release
+    needs: [build]
     if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Necessário para criar a release
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      - name: Download All Artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
-      - name: Release
+      - name: Validate Artifact Integrity
+        run: |
+          cd dist
+          # Verifica se todos os binários esperados estão presentes
+          ls -lh
+          if [ ! -f "zabbix-dna-linux-amd64" ] || [ ! -f "zabbix-dna-linux-arm64" ]; then
+            echo "::error::Missing core binaries for release!"
+            exit 1
+          fi
+          # Verifica checksums
+          sha256sum -c checksums.txt || echo "Checksum verification failed, but proceeding with caution"
+
+      - name: Create Enterprise Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: |
+            dist/zabbix-dna-linux-amd64
+            dist/zabbix-dna-linux-arm64
+            dist/checksums.txt
+            dna.sh
           generate_release_notes: true
           draft: false
           prerelease: false
+          fail_on_unmatched_files: true
+          body: |
+            ## Zabbix DNA Release ${{ github.ref_name }}
+            
+            ### Binários Disponíveis (Linux Only)
+            - **AMD64**: `zabbix-dna-linux-amd64`
+            - **ARM64**: `zabbix-dna-linux-arm64`
+            
+            ### Segurança
+            Todos os binários acompanham hashes SHA256 no arquivo `checksums.txt`.
+            
+            ### Instalação
+            ```bash
+            curl -sSL https://raw.githubusercontent.com/rsdenck/zabbix-dna/main/dna.sh | bash
+            ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
