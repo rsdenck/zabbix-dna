@@ -1,6 +1,3 @@
-//go:build !nosalt
-// +build !nosalt
-
 package commands
 
 import (
@@ -140,5 +137,3 @@ func getSaltClient(cmd *cobra.Command) (*salt.Client, error) {
 		Verbose: false,
 	}, nil
 }
-
-

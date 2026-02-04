@@ -29,7 +29,7 @@ func newProxyListCmd() *cobra.Command {
 			handleError(err)
 
 			params := map[string]interface{}{
-				"output":      []string{"proxyid", "name", "status", "address", "version", "compatibility"},
+				"output":      []string{"proxyid", "name", "operating_mode", "address", "version", "compatibility"},
 				"selectHosts": "count",
 				"limit":       limit,
 			}
@@ -50,7 +50,7 @@ func newProxyListCmd() *cobra.Command {
 				}
 
 				mode := "Active"
-				if p["status"].(string) == "6" {
+				if m, ok := p["operating_mode"].(string); ok && m == "1" {
 					mode = "Passive"
 				}
 

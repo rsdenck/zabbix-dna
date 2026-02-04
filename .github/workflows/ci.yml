@@ -2,7 +2,7 @@ name: Enterprise CI/CD Pipeline
 
 # @description Pipeline de CI/CD robusto para o ecossistema zabbix-dna.
 # @author Ranlens Denck (Senior DevOps Engineer)
-# @version 3.1.1
+# @version 3.1.2
 # @targets Linux Only (amd64, arm64)
 # @toolchain Go stable (Ensuring compatibility)
 
@@ -72,7 +72,7 @@ jobs:
 
       - name: Execute Tests
         run: |
-          go test -v -race -tags nosalt -coverprofile=coverage.out -covermode=atomic ./...
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
       - name: Validate Installer Script
         run: |
@@ -113,7 +113,7 @@ jobs:
           fi
           mkdir -p dist
           BINARY_NAME="zabbix-dna-${{ matrix.goos }}-${{ matrix.goarch }}"
-          go build -v -trimpath -tags nosalt \
+          go build -v -trimpath \
             -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
             -o "dist/${BINARY_NAME}" ./cmd/dna/main.go
 
@@ -149,17 +149,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/zabbix-dna-linux-amd64
-            dist/zabbix-dna-linux-arm64
-            dist/checksums.txt
-            dna.sh
+            dist/*
           generate_release_notes: true
           draft: false
           prerelease: false
-          body: |
-            ## Zabbix DNA Release ${{ github.ref_name }}
-            - AMD64: `zabbix-dna-linux-amd64`
-            - ARM64: `zabbix-dna-linux-arm64`
-            - Toolchain: Go Stable (1.23.x)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

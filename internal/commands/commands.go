@@ -47,6 +47,9 @@ func AddCommands(rootCmd *cobra.Command) {
 	// MACRO
 	rootCmd.AddCommand(newMacroCmd())
 
+	// MCP - Model Context Protocol
+	rootCmd.AddCommand(newMCPCmd())
+
 	// INTERFACE
 	rootCmd.AddCommand(newHostInterfaceCmd())
 
@@ -72,12 +75,10 @@ func newVersionCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			// Version will be injected at build time in main.go
 			// but we can also show some static info here
-			fmt.Println("ZABBIX-DNA CLI | v1.0.6")
+			fmt.Println("ZABBIX-DNA CLI | v1.0.7")
 			fmt.Println("Engine: Go 1.24.2")
 			fmt.Println("Zabbix Compatibility: 6.4, 7.0, 7.2, 8.0")
 			fmt.Println("Features: SaltStack Integration, OTLP, TUI")
 		},
 	}
 }
-
-
