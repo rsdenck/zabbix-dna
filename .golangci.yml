@@ -1,0 +1,45 @@
+# .golangci.yml - Configuração de Lint Progressivo (Enterprise-Grade)
+# Foco: Qualidade sem quebrar a entrega, impedindo regressões em código novo.
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+  # Permite que o lint passe se o código legado tiver erros, 
+  # mas bloqueia se código novo introduzir problemas.
+  allow-parallel-runners: true
+
+linters:
+  disable-all: true
+  enable:
+    - govet        # Reporta erros comuns de lógica e suspeitos
+    - errcheck     # Garante que erros retornados sejam tratados
+    - staticcheck  # Aplica uma vasta gama de verificações de qualidade e performance
+    - ineffassign  # Detecta atribuições que não são utilizadas
+    - gosimple     # Sugere simplificações de código
+    - typecheck    # Verifica erros de tipagem (essencial)
+    - bodyclose    # Verifica se o corpo de requisições HTTP foi fechado (crítico para Go)
+    - misspell     # Corrige erros de ortografia comuns no código
+
+issues:
+  # Máximo de problemas por linter - 0 significa ilimitado
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  
+  # Regras de exclusão para reduzir ruído inicial
+  exclude-use-default: false
+  
+  # Prioriza problemas em código novo
+  new: true
+  new-from-rev: origin/main
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  staticcheck:
+    checks: ["all"]
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+severity:
+  default-severity: error

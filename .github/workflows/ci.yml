@@ -44,8 +44,9 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          args: --timeout=5m
-        continue-on-error: false # Qualidade não é negociável
+          args: --config=.golangci.yml --new-from-rev=origin/main
+          only-new-issues: true
+        continue-on-error: false # Agora o lint é justo: bloqueia apenas regressões
 
       - name: Security Scan (Gosec)
         run: |
