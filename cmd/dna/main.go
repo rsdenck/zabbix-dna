@@ -15,12 +15,16 @@ import (
 )
 
 var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+
 	bannerStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FFFFFF")).
-		Background(lipgloss.Color("#D20000")).
-		Padding(1, 2).
-		Bold(true).
-		MarginBottom(1)
+			Foreground(lipgloss.Color("#FFFFFF")).
+			Background(lipgloss.Color("#D20000")).
+			Padding(1, 2).
+			Bold(true).
+			MarginBottom(1)
 )
 
 func main() {
@@ -38,7 +42,7 @@ written 100% in Go with a focus on observability and automation.`,
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				fmt.Println(bannerStyle.Render("ZABBIX-DNA CLI | v1.0.0"))
+				fmt.Println(bannerStyle.Render(fmt.Sprintf("ZABBIX-DNA CLI | %s", version)))
 				choice, _ := tui.Start()
 				if choice != "" {
 					fmt.Printf("\n> Executando: %s\n\n", choice)
