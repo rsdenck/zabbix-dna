@@ -40,6 +40,8 @@ jobs:
           sudo apt-get install -y libzmq3-dev
 
       - name: Verify Dependencies
+        env:
+          CGO_ENABLED: 1
         run: |
           go mod tidy
           go mod verify
@@ -51,6 +53,8 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.5
 
       - name: Run Progressive Lint
+        env:
+          CGO_ENABLED: 1
         run: |
           # Execução via CLI com controle total sobre as flags de lint progressivo
           $(go env GOPATH)/bin/golangci-lint run --config=.golangci.yml --new-from-rev=origin/main --timeout=10m
@@ -113,12 +117,27 @@ jobs:
 
       - name: Install System Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libzmq3-dev gcc-aarch64-linux-gnu
           if [ "${{ matrix.goarch }}" = "arm64" ]; then
             sudo dpkg --add-architecture arm64
+            # Configuração de mirrors para Ubuntu 24.04 (Noble) Multi-Arch
+            if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then
+              sudo sed -i 's/Architectures: amd64 i386/Architectures: amd64 i386 arm64/' /etc/apt/sources.list.d/ubuntu.sources
+              sudo tee /etc/apt/sources.list.d/ubuntu-ports.sources <<EOF
+Types: deb
+URIs: http://ports.ubuntu.com/ubuntu-ports
+Suites: $(lsb_release -sc) $(lsb_release -sc)-updates $(lsb_release -sc)-backports
+Components: main universe restricted multiverse
+Architectures: arm64
+EOF
+            else
+              sudo sed -i "s/deb http/deb [arch=amd64] http/g" /etc/apt/sources.list
+              echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports $(lsb_release -sc) main universe" | sudo tee /etc/apt/sources.list.d/arm64.list
+            fi
+            sudo apt-get update || true
+            sudo apt-get install -y libzmq3-dev:arm64 gcc-aarch64-linux-gnu
+          else
             sudo apt-get update
-            sudo apt-get install -y libzmq3-dev:arm64
+            sudo apt-get install -y libzmq3-dev
           fi
 
       - name: Build Reproducible Binary
