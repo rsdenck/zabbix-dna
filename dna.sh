@@ -39,10 +39,13 @@ REPO="rsdenck/zabbix-dna"
 echo -e "Buscando informações da versão..."
 # Tenta obter a última release, se falhar, tenta obter a última tag
 for i in {1..5}; do
-    LATEST_TAG=$(curl -sH "User-Agent: zabbix-dna-installer" "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    # Uso de grep -o e cut para evitar problemas com JSON minificado e ganância do sed
+    LATEST_TAG=$(curl -sH "User-Agent: zabbix-dna-installer" "https://api.github.com/repos/$REPO/releases/latest" | grep -o '"tag_name":[ ]*"[^"]*"' | cut -d'"' -f4 || true)
     if [ ! -z "$LATEST_TAG" ]; then break; fi
-    LATEST_TAG=$(curl -sH "User-Agent: zabbix-dna-installer" "https://api.github.com/repos/$REPO/tags" | grep '"name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+    
+    LATEST_TAG=$(curl -sH "User-Agent: zabbix-dna-installer" "https://api.github.com/repos/$REPO/tags" | grep -o '"name":[ ]*"[^"]*"' | head -n 1 | cut -d'"' -f4 || true)
     if [ ! -z "$LATEST_TAG" ]; then break; fi
+    
     echo -e "Tentativa $i falhou. Aguardando..."
     sleep 2
 done

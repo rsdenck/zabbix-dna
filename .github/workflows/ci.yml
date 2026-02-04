@@ -2,9 +2,9 @@ name: Enterprise CI/CD Pipeline
 
 # @description Pipeline de CI/CD robusto para o ecossistema zabbix-dna.
 # @author Ranlens Denck (Senior DevOps Engineer)
-# @version 3.0.0
+# @version 3.1.0
 # @targets Linux Only (amd64, arm64)
-# @toolchain Go 1.26 (Experimental/Future)
+# @toolchain Go stable (Ensuring compatibility)
 
 on:
   push:
@@ -27,10 +27,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Go Toolchain (1.26)
+      - name: Setup Go Toolchain
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26'
+          go-version: 'stable'
           cache: true
           check-latest: true
 
@@ -63,10 +63,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Go (1.26)
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26'
+          go-version: 'stable'
           cache: true
 
       - name: Execute Tests
@@ -94,10 +94,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Go (1.26)
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26'
+          go-version: 'stable'
           cache: true
 
       - name: Build Reproducible Binary
@@ -159,6 +159,6 @@ jobs:
             ## Zabbix DNA Release ${{ github.ref_name }}
             - AMD64: `zabbix-dna-linux-amd64`
             - ARM64: `zabbix-dna-linux-arm64`
-            - Toolchain: Go 1.26
+            - Toolchain: Go Stable (1.23.x)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

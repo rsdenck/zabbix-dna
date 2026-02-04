@@ -1,6 +1,6 @@
 module zabbix-dna
 
-go 1.26
+go 1.23.6
 
 require (
 	github.com/charmbracelet/bubbles v0.21.1
