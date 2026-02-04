@@ -143,3 +143,4 @@ func getTemplateID(client *api.ZabbixClient, name string) string {
 	return ""
 }
 
+
