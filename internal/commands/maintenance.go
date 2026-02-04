@@ -112,7 +112,6 @@ func newMaintenanceCreateCmd() *cobra.Command {
 			outputResult(cmd, resp, headers, rows)
 		},
 	}
-}
 
 	cmd.Flags().StringVarP(&hostID, "hostid", "H", "", "Host ID for maintenance")
 	cmd.Flags().StringVarP(&groupID, "groupid", "g", "", "Host group ID for maintenance")

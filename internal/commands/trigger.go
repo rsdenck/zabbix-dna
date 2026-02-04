@@ -106,7 +106,6 @@ func newTriggerCreateCmd() *cobra.Command {
 			outputResult(cmd, resp, headers, rows)
 		},
 	}
-}
 
 	cmd.Flags().StringVarP(&expression, "expression", "e", "", "Trigger expression")
 	cmd.Flags().IntVarP(&priority, "priority", "p", 0, "Trigger priority (0-5)")

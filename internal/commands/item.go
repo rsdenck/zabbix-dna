@@ -109,7 +109,6 @@ func newItemCreateCmd() *cobra.Command {
 			outputResult(cmd, resp, headers, rows)
 		},
 	}
-}
 
 	cmd.Flags().StringVarP(&hostID, "hostid", "H", "", "Host ID for the item")
 	cmd.Flags().StringVarP(&key, "key", "k", "", "Key for the item")

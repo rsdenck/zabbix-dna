@@ -426,6 +426,8 @@ func newHostEnableCmd() *cobra.Command {
 			outputResult(cmd, updateResp, headers, rows)
 		},
 	}
+
+	return cmd
 }
 
 func newHostDisableCmd() *cobra.Command {
@@ -533,7 +535,7 @@ func newHostCloneCmd() *cobra.Command {
 			outputResult(cmd, createResp, headers, rows)
 		},
 	}
-}
+
 	cmd.Flags().StringVarP(&newName, "new-name", "n", "", "New name for the cloned host")
 	return cmd
 }
