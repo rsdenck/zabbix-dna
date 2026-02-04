@@ -30,7 +30,7 @@ issues:
   
   # Prioriza problemas em código novo
   new: true
-  new-from-rev: origin/main
+  # Removido new-from-rev daqui para ser controlado via CLI no ci.yml
 
 linters-settings:
   govet:
