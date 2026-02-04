@@ -14,7 +14,7 @@
 ## **ZABBIX-DNA**
 O **ZABBIX-DNA** é o propósito central deste ecossistema: uma plataforma CLI de classe enterprise escrita 100% em Go, focada em performance extrema e observabilidade moderna.
 
-![Zabbix DNA](https://raw.githubusercontent.com/rsdenck/zabbix-dna/main/doc/zabbix-dna.png)
+![Zabbix DNA](doc/zabbix-dna.png)
 
 ### **Propósito Estratégico**
 - **Performance Nativa**: Arquitetura em Go para processamento massivo de dados sem overhead.
@@ -24,7 +24,7 @@ O **ZABBIX-DNA** é o propósito central deste ecossistema: uma plataforma CLI d
 
 ---
 
-![Configuração Zabbix DNA](https://raw.githubusercontent.com/rsdenck/zabbix-dna/main/doc/zabbix-dna-config.png)
+![Configuração Zabbix DNA](doc/zabbix-dna-config.png)
 
 ## **Guia de Início Rápido (Linux Only)**
 
