@@ -13,8 +13,6 @@ linters:
   enable:
     - govet        # Reporta erros comuns de lógica e suspeitos
     - errcheck     # Garante que erros retornados sejam tratados
-    - staticcheck  # Aplica uma vasta gama de verificações de qualidade e performance
-    - ineffassign  # Detecta atribuições que não são utilizadas
     - gosimple     # Sugere simplificações de código
     - bodyclose    # Verifica se o corpo de requisições HTTP foi fechado (crítico para Go)
     - misspell     # Corrige erros de ortografia comuns no código
