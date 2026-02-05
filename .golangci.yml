@@ -29,7 +29,7 @@ issues:
   exclude-use-default: false
   
   # Prioriza problemas em código novo
-  new: true
+  new: false
   # Removido new-from-rev daqui para ser controlado via CLI no ci.yml
 
 linters-settings:

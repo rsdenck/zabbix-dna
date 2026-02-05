@@ -58,7 +58,8 @@ jobs:
         run: |
           # Execução via CLI com controle total sobre as flags de lint progressivo
           # Removendo --new-from-rev para garantir que todo o código seja validado no push da tag
-          $(go env GOPATH)/bin/golangci-lint run --config=.golangci.yml --timeout=10m
+          # Adicionado -v para debug em caso de falha
+          $(go env GOPATH)/bin/golangci-lint run -v --config=.golangci.yml --timeout=10m
 
       - name: Security Scan (Gosec)
         run: |
