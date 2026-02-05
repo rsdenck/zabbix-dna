@@ -3,6 +3,7 @@ package output
 import (
 	"os"
 
+	"github.com/charmbracelet/x/term"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -25,6 +26,12 @@ func NewTableRenderer(headers []string, rows [][]string) *TableRenderer {
 // Any other format (JSON, YAML, etc.) is prohibited.
 func (r *TableRenderer) Render() {
 	table := tablewriter.NewWriter(os.Stdout)
+
+	// Get terminal width for responsiveness
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err == nil && width > 0 {
+		table.SetColWidth(width / (len(r.Headers) + 1)) // Distribute width
+	}
 
 	// Strictly aligned columns and fixed headers
 	table.SetHeader(r.Headers)

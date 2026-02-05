@@ -29,9 +29,8 @@ func newProxyListCmd() *cobra.Command {
 			handleError(err)
 
 			params := map[string]interface{}{
-				"output":      "extend",
-				"selectHosts": "count",
-				"limit":       limit,
+				"output": []string{"proxyid", "name", "operating_mode", "address", "version", "compatibility"},
+				"limit":  limit,
 			}
 			result, err := client.Call("proxy.get", params)
 			handleError(err)
@@ -39,13 +38,13 @@ func newProxyListCmd() *cobra.Command {
 			var proxies []map[string]interface{}
 			json.Unmarshal(result, &proxies)
 
-			headers := []string{"Name", "Address", "Mode", "Hosts", "Version", "Compatibility"}
+			headers := []string{"Name", "Address", "Mode", "Version", "Compatibility"}
 			var rows [][]string
 
 			for _, p := range proxies {
 				name := fmt.Sprintf("%v", p["name"])
 				address := fmt.Sprintf("%v", p["address"])
-				if address == "" {
+				if address == "" || address == "<nil>" {
 					address = "127.0.0.1"
 				}
 
@@ -54,9 +53,8 @@ func newProxyListCmd() *cobra.Command {
 					mode = "Passive"
 				}
 
-				hosts := fmt.Sprintf("%v", p["hosts"])
 				version := fmt.Sprintf("%v", p["version"])
-				if version == "" {
+				if version == "" || version == "<nil>" {
 					version = "0"
 				}
 
