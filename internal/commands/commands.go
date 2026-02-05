@@ -72,9 +72,14 @@ func newVersionCmd() *cobra.Command {
 		Short: "Print the version of Zabbix-DNA",
 		Run: func(cmd *cobra.Command, args []string) {
 			headers := []string{"Property", "Value"}
+			cgoStatus := "Disabled"
+			if isCGOBuilt() {
+				cgoStatus = "Enabled (SaltStack Support)"
+			}
 			rows := [][]string{
 				{"Zabbix-DNA", "v1.0.7"},
 				{"Engine", "Go 1.24.2"},
+				{"CGO/SaltStack", cgoStatus},
 				{"Zabbix Compatibility", "6.4, 7.0, 7.2, 8.0"},
 				{"Features", "SaltStack, OTLP, TUI"},
 			}
