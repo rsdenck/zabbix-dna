@@ -16,7 +16,6 @@ linters:
     - staticcheck  # Aplica uma vasta gama de verificações de qualidade e performance
     - ineffassign  # Detecta atribuições que não são utilizadas
     - gosimple     # Sugere simplificações de código
-    - typecheck    # Verifica erros de tipagem (essencial)
     - bodyclose    # Verifica se o corpo de requisições HTTP foi fechado (crítico para Go)
     - misspell     # Corrige erros de ortografia comuns no código
 

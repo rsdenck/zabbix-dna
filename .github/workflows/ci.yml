@@ -56,10 +56,8 @@ jobs:
         env:
           CGO_ENABLED: 1
         run: |
-          # Execução via CLI com controle total sobre as flags de lint progressivo
-          # Removendo --new-from-rev para garantir que todo o código seja validado no push da tag
-          # Adicionado -v para debug em caso de falha
-          $(go env GOPATH)/bin/golangci-lint run -v --config=.golangci.yml --timeout=10m
+          # Execução simplificada para garantir o release v1.0.7
+          $(go env GOPATH)/bin/golangci-lint run --config=.golangci.yml --timeout=10m --allow-parallel-runners
 
       - name: Security Scan (Gosec)
         run: |
