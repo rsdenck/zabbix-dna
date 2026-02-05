@@ -37,10 +37,22 @@ func newInitCmd() *cobra.Command {
 
 			configContent := fmt.Sprintf(`[zabbix]
 url = "%s"
-token = "%s"
+auth_token = "%s"
 user = "%s"
 password = "%s"
 timeout = 30
+verify_ssl = true
+
+[output]
+format = "table"
+color = true
+paging = false
+
+[app]
+use_session_file = true
+session_file = "~/.zabbix-dna/session.json"
+history = true
+history_file = "~/.zabbix-dna/history"
 
 [otlp]
 endpoint = "http://localhost:4318"

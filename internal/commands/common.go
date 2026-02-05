@@ -19,9 +19,56 @@ var (
 		Bold(true)
 )
 
-func outputResult(cmd *cobra.Command, result interface{}, headers []string, rows [][]string) {
-	// Prohibited: JSON, XML, YAML, etc.
-	// Only centralized TableRenderer is allowed.
+type Result struct {
+	ReturnCode string      `json:"return_code"`
+	Errors     []string    `json:"errors"`
+	Message    string      `json:"message"`
+	Result     interface{} `json:"result"`
+}
+
+func outputResult(cmd *cobra.Command, data interface{}, headers []string, rows [][]string) {
+	cfgPath, _ := cmd.Flags().GetString("config")
+	cfg, _ := config.LoadConfig(cfgPath)
+
+	format := "table"
+	if cfg != nil && cfg.App.Output.Format != "" {
+		format = cfg.App.Output.Format
+	}
+
+	// Always wrap in Result for JSON
+	res := Result{
+		ReturnCode: "Done",
+		Errors:     []string{},
+		Message:    "",
+		Result:     data,
+	}
+
+	// If it's a message-only result (like "Created host...")
+	if msg, ok := data.(string); ok && headers == nil && rows == nil {
+		res.Message = msg
+		res.Result = nil
+	}
+
+	if format == "json" {
+		if res.Result == nil && rows != nil {
+			res.Result = rows
+		}
+		jsonData, _ := json.MarshalIndent(res, "", "  ")
+		fmt.Println(string(jsonData))
+		return
+	}
+
+	// Default to Table
+	if res.Message != "" {
+		fmt.Println(res.Message)
+		return
+	}
+
+	if len(rows) == 0 {
+		fmt.Println("No results found.")
+		return
+	}
+
 	renderer := output.NewTableRenderer(headers, rows)
 	renderer.Render()
 }
@@ -33,14 +80,14 @@ func getZabbixClient(cmd *cobra.Command) (*api.ZabbixClient, error) {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	client := api.NewClient(cfg.Zabbix.URL, cfg.Zabbix.Token, cfg.Zabbix.Timeout)
-	if cfg.Zabbix.Token == "" && cfg.Zabbix.User != "" {
-		err := client.Login(cfg.Zabbix.User, cfg.Zabbix.Password)
+	client := api.NewClient(cfg.API.URL, cfg.API.AuthToken, cfg.API.Timeout)
+	if cfg.API.AuthToken == "" && cfg.API.Username != "" {
+		err := client.Login(cfg.API.Username, cfg.API.Password)
 		if err != nil {
 			return nil, fmt.Errorf("login failed: %w", err)
 		}
-	} else if cfg.Zabbix.Token == "" && cfg.Zabbix.User == "" {
-		return nil, fmt.Errorf("no authentication provided (token or user/password)")
+	} else if cfg.API.AuthToken == "" && cfg.API.Username == "" {
+		return nil, fmt.Errorf("no authentication provided (token or username/password)")
 	}
 
 	return client, nil
@@ -71,6 +118,63 @@ func getHostID(client *api.ZabbixClient, name string) string {
 	return ""
 }
 
+func getHostGroupsIDs(client *api.ZabbixClient, names []string) []string {
+	params := map[string]interface{}{
+		"filter": map[string]interface{}{
+			"name": names,
+		},
+	}
+	result, err := client.Call("hostgroup.get", params)
+	if err != nil {
+		return nil
+	}
+	var groups []map[string]interface{}
+	json.Unmarshal(result, &groups)
+	var ids []string
+	for _, g := range groups {
+		ids = append(ids, g["groupid"].(string))
+	}
+	return ids
+}
+
+func getHostsIDs(client *api.ZabbixClient, names []string) []string {
+	params := map[string]interface{}{
+		"filter": map[string]interface{}{
+			"host": names,
+		},
+	}
+	result, err := client.Call("host.get", params)
+	if err != nil {
+		return nil
+	}
+	var hosts []map[string]interface{}
+	json.Unmarshal(result, &hosts)
+	var ids []string
+	for _, h := range hosts {
+		ids = append(ids, h["hostid"].(string))
+	}
+	return ids
+}
+
+func getPriorityName(p string) string {
+	switch p {
+	case "0":
+		return "Not classified"
+	case "1":
+		return "Information"
+	case "2":
+		return "Warning"
+	case "3":
+		return "Average"
+	case "4":
+		return "High"
+	case "5":
+		return "Disaster"
+	default:
+		return "Unknown"
+	}
+}
+
 func getTemplateID(client *api.ZabbixClient, name string) string {
 	params := map[string]interface{}{
 		"filter": map[string]interface{}{
@@ -85,6 +189,26 @@ func getTemplateID(client *api.ZabbixClient, name string) string {
 	json.Unmarshal(result, &templates)
 	if len(templates) > 0 {
 		return templates[0]["templateid"].(string)
+	}
+	return ""
+}
+
+func getEventForTrigger(client *api.ZabbixClient, triggerID string) string {
+	params := map[string]interface{}{
+		"output":    []string{"eventid"},
+		"objectids": []string{triggerID},
+		"sortfield": "clock",
+		"sortorder": "DESC",
+		"limit":     1,
+	}
+	result, err := client.Call("event.get", params)
+	if err != nil {
+		return ""
+	}
+	var events []map[string]interface{}
+	json.Unmarshal(result, &events)
+	if len(events) > 0 {
+		return events[0]["eventid"].(string)
 	}
 	return ""
 }

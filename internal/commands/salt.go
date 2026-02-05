@@ -21,6 +21,60 @@ func newSaltCmd() *cobra.Command {
 
 	cmd.AddCommand(newSaltPingCmd())
 	cmd.AddCommand(newSaltRunCmd())
+	cmd.AddCommand(newSaltDeployAgentCmd())
+
+	return cmd
+}
+
+func newSaltDeployAgentCmd() *cobra.Command {
+	var target string
+	var targetType string
+	var osType string
+
+	cmd := &cobra.Command{
+		Use:   "deploy_agent",
+		Short: "Deploy Dimo Zabbix Agent via SaltStack",
+		Run: func(cmd *cobra.Command, args []string) {
+			client, err := getSaltClient(cmd)
+			handleError(err)
+
+			fmt.Printf("Starting deployment for target: %s (%s)\n", target, osType)
+
+			var commands []string
+			if osType == "linux" {
+				commands = []string{
+					"file.mkdir /opt/dimo/",
+					"cmd.run 'curl -o /opt/dimo/zabbix_agent_dimo https://repo.dimo.com/zabbix/agent_linux'",
+					"cmd.run 'chmod +x /opt/dimo/zabbix_agent_dimo'",
+					"service.restart zabbix-agent2",
+				}
+			} else {
+				commands = []string{
+					"file.mkdir C:\\Dimo\\",
+					"cmd.run 'powershell Invoke-WebRequest -Uri https://repo.dimo.com/zabbix/agent_win -OutFile C:\\Dimo\\zabbix_agent_dimo.exe'",
+					"service.restart zabbix-agent2",
+				}
+			}
+
+			for _, saltCmd := range commands {
+				jid := client.GetJid()
+				fmt.Printf("Executing: %s (JID: %s)... ", saltCmd, jid)
+				err = client.SendCommand(jid, target, targetType, saltCmd)
+				if err != nil {
+					fmt.Printf("FAILED: %v\n", err)
+					handleError(fmt.Errorf("deployment failed at step: %s", saltCmd))
+					return
+				}
+				fmt.Println("SUCCESS")
+			}
+
+			outputResult(cmd, "Dimo Agent deployed successfully via SaltStack.", nil, nil)
+		},
+	}
+
+	cmd.Flags().StringVarP(&target, "target", "t", "*", "Target minions")
+	cmd.Flags().StringVarP(&targetType, "type", "T", "glob", "Target type")
+	cmd.Flags().StringVarP(&osType, "os", "o", "linux", "Operating system (linux/windows)")
 
 	return cmd
 }

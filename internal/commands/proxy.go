@@ -68,7 +68,7 @@ func newProxyListCmd() *cobra.Command {
 					}
 				}
 
-				rows = append(rows, []string{name, address, mode, hosts, version, comp})
+				rows = append(rows, []string{name, address, mode, version, comp})
 			}
 
 			outputResult(cmd, proxies, headers, rows)

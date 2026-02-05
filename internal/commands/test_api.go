@@ -40,7 +40,7 @@ func newTestAPICmd() *cobra.Command {
 			rows := [][]string{
 				{"Zabbix", "Status", zabbixStatus},
 				{"Zabbix", "Version", string(zabbixVersion)},
-				{"Zabbix", "Endpoint", cfg.Zabbix.URL},
+				{"Zabbix", "Endpoint", cfg.API.URL},
 				{"SaltStack", "Status", saltStatus},
 				{"SaltStack", "Endpoint", saltServer},
 			}

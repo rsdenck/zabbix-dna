@@ -20,12 +20,13 @@ func newTriggerCmd() *cobra.Command {
 }
 
 func newTriggerListCmd() *cobra.Command {
-	var hostName string
+	var hostNames []string
+	var hostGroupNames []string
 	var limit int
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List triggers for a host",
+		Short: "List triggers for hosts or host groups",
 		Run: func(cmd *cobra.Command, args []string) {
 			client, err := getZabbixClient(cmd)
 			handleError(err)
@@ -37,8 +38,11 @@ func newTriggerListCmd() *cobra.Command {
 				"sortorder": "DESC",
 			}
 
-			if hostName != "" {
-				params["host"] = hostName
+			if len(hostNames) > 0 {
+				params["hostids"] = getHostsIDs(client, hostNames)
+			}
+			if len(hostGroupNames) > 0 {
+				params["groupids"] = getHostGroupsIDs(client, hostGroupNames)
 			}
 
 			result, err := client.Call("trigger.get", params)
@@ -70,7 +74,8 @@ func newTriggerListCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&hostName, "host", "H", "", "Host name to list triggers for")
+	cmd.Flags().StringSliceVar(&hostNames, "host", []string{}, "Host names (comma-separated)")
+	cmd.Flags().StringSliceVar(&hostGroupNames, "hostgroup", []string{}, "Host group names (comma-separated)")
 	cmd.Flags().IntVarP(&limit, "limit", "l", 100, "Limit the number of triggers")
 
 	return cmd
@@ -113,24 +118,3 @@ func newTriggerCreateCmd() *cobra.Command {
 
 	return cmd
 }
-
-func getPriorityName(p string) string {
-	switch p {
-	case "0":
-		return "Not classified"
-	case "1":
-		return "Information"
-	case "2":
-		return "Warning"
-	case "3":
-		return "Average"
-	case "4":
-		return "High"
-	case "5":
-		return "Disaster"
-	default:
-		return "Unknown"
-	}
-}
-
-

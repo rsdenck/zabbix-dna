@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"zabbix-dna/internal/config"
 
 	"github.com/spf13/cobra"
 )
@@ -237,7 +238,9 @@ func newHostShowCmd() *cobra.Command {
 
 func newHostCreateCmd() *cobra.Command {
 	var groupID string
+	var groupNames []string
 	var ip string
+	var createInterface bool
 
 	cmd := &cobra.Command{
 		Use:     "create [host name]",
@@ -248,12 +251,42 @@ func newHostCreateCmd() *cobra.Command {
 			client, err := getZabbixClient(cmd)
 			handleError(err)
 
+			cfgPath, _ := cmd.Flags().GetString("config")
+			cfg, _ := config.LoadConfig(cfgPath)
+
+			// Default hostgroups from config
+			if len(groupNames) == 0 && groupID == "" && cfg != nil && len(cfg.App.Commands.CreateHost.Hostgroups) > 0 {
+				groupNames = cfg.App.Commands.CreateHost.Hostgroups
+			}
+
+			// Interface default from config
+			if !cmd.Flags().Changed("interface") && cfg != nil {
+				createInterface = cfg.App.Commands.CreateHost.CreateInterface
+			}
+
+			var groups []map[string]string
+			if groupID != "" {
+				groups = append(groups, map[string]string{"groupid": groupID})
+			}
+			if len(groupNames) > 0 {
+				ids := getHostGroupsIDs(client, groupNames)
+				for _, id := range ids {
+					groups = append(groups, map[string]string{"groupid": id})
+				}
+			}
+
+			if len(groups) == 0 {
+				handleError(fmt.Errorf("at least one hostgroup must be specified (via --hostgroup, --groupid or config)"))
+				return
+			}
+
 			params := map[string]interface{}{
-				"host": args[0],
-				"groups": []map[string]string{
-					{"groupid": groupID},
-				},
-				"interfaces": []map[string]interface{}{
+				"host":   args[0],
+				"groups": groups,
+			}
+
+			if createInterface {
+				params["interfaces"] = []map[string]interface{}{
 					{
 						"type":  1, // Agent
 						"main":  1,
@@ -262,7 +295,9 @@ func newHostCreateCmd() *cobra.Command {
 						"dns":   "",
 						"port":  "10050",
 					},
-				},
+				}
+			} else {
+				params["interfaces"] = []interface{}{}
 			}
 
 			result, err := client.Call("host.create", params)
@@ -272,15 +307,14 @@ func newHostCreateCmd() *cobra.Command {
 			json.Unmarshal(result, &resp)
 
 			hostIDs := resp["hostids"].([]interface{})
-			headers := []string{"Host", "Group ID", "IP", "Action", "Status", "ID"}
-			rows := [][]string{{args[0], groupID, ip, "Create", "Success", fmt.Sprintf("%v", hostIDs[0])}}
-			outputResult(cmd, resp, headers, rows)
+			outputResult(cmd, fmt.Sprintf("Created host %s (%v).", args[0], hostIDs[0]), nil, nil)
 		},
 	}
 
 	cmd.Flags().StringVarP(&groupID, "groupid", "g", "", "Group ID for the host")
+	cmd.Flags().StringSliceVar(&groupNames, "hostgroup", []string{}, "Host group names (comma-separated)")
 	cmd.Flags().StringVarP(&ip, "ip", "i", "127.0.0.1", "IP address for the host interface")
-	cmd.MarkFlagRequired("groupid")
+	cmd.Flags().BoolVar(&createInterface, "interface", true, "Create an interface for the host")
 
 	return cmd
 }

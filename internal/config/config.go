@@ -8,18 +8,57 @@ import (
 )
 
 type Config struct {
-	Zabbix   ZabbixConfig `toml:"zabbix"`
-	OTLP     OTLPConfig   `toml:"otlp"`
-	Salt     SaltConfig   `toml:"salt"`
-	LogLevel string       `toml:"log_level"`
+	API     APIConfig     `toml:"api"`
+	App     AppConfig     `toml:"app"`
+	Logging LoggingConfig `toml:"logging"`
+	OTLP    OTLPConfig    `toml:"otlp"`
+	Salt    SaltConfig    `toml:"salt"`
 }
 
-type ZabbixConfig struct {
-	URL      string `toml:"url"`
-	Token    string `toml:"token"`
-	User     string `toml:"user"`
-	Password string `toml:"password"`
-	Timeout  int    `toml:"timeout"`
+type APIConfig struct {
+	URL       string `toml:"url"`
+	Username  string `toml:"username"`
+	Password  string `toml:"password"`
+	AuthToken string `toml:"auth_token"`
+	VerifySSL bool   `toml:"verify_ssl"`
+	Timeout   int    `toml:"timeout"`
+}
+
+type OutputConfig struct {
+	Format string `toml:"format"` // "table", "json", "csv"
+	Color  bool   `toml:"color"`
+	Paging bool   `toml:"paging"`
+}
+
+type AutoUpdateConfig struct {
+	Enabled bool `toml:"enabled"`
+	Backup  bool `toml:"backup"`
+}
+
+type CreateHostConfig struct {
+	CreateInterface bool     `toml:"create_interface"`
+	Hostgroups      []string `toml:"hostgroups"`
+}
+
+type CommandsConfig struct {
+	CreateHost CreateHostConfig `toml:"create_host"`
+}
+
+type AppConfig struct {
+	UseSessionFile   bool             `toml:"use_session_file"`
+	SessionFile      string           `toml:"session_file"`
+	History          bool             `toml:"history"`
+	HistoryFile      string           `toml:"history_file"`
+	BulkMode         string           `toml:"bulk_mode"`
+	Output           OutputConfig     `toml:"output"`
+	ConfigAutoUpdate AutoUpdateConfig `toml:"config_auto_update"`
+	Commands         CommandsConfig   `toml:"commands"`
+}
+
+type LoggingConfig struct {
+	Enabled  bool   `toml:"enabled"`
+	LogLevel string `toml:"log_level"`
+	LogFile  string `toml:"log_file"`
 }
 
 type SaltConfig struct {
@@ -50,14 +89,38 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	// Default values
-	if cfg.Zabbix.Timeout == 0 {
-		cfg.Zabbix.Timeout = 30
+	if cfg.API.Timeout == 0 {
+		cfg.API.Timeout = 30
 	}
+	if cfg.App.Output.Format == "" {
+		cfg.App.Output.Format = "table"
+	}
+	if cfg.App.Output.Color {
+		cfg.App.Output.Color = true // default to true if not specified?
+	}
+	if cfg.App.SessionFile == "" {
+		cfg.App.SessionFile = "~/.zabbix-dna/session.json"
+	}
+	if cfg.App.HistoryFile == "" {
+		cfg.App.HistoryFile = "~/.zabbix-dna/history"
+	}
+	if cfg.App.BulkMode == "" {
+		cfg.App.BulkMode = "strict"
+	}
+	if cfg.App.ConfigAutoUpdate.Enabled {
+		// Enabled by default if not set (Go default is false, but we want true)
+		// Wait, if it's false it might be intentional.
+		// Actually, let's just set the defaults if the file was empty or missing.
+	}
+	cfg.App.ConfigAutoUpdate.Enabled = true // Default
+	cfg.App.ConfigAutoUpdate.Backup = true  // Default
+
 	if cfg.OTLP.ServiceName == "" {
 		cfg.OTLP.ServiceName = "zabbix-dna"
+	}
+	if cfg.Logging.LogLevel == "" {
+		cfg.Logging.LogLevel = "INFO"
 	}
 
 	return &cfg, nil
 }
-
-

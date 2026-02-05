@@ -159,17 +159,20 @@ func Start() error {
 	}
 
 	cfg := config.Config{
-		Zabbix: config.ZabbixConfig{
-			URL:     zabbixURL,
-			Token:   apiToken,
-			Timeout: 30,
+		API: config.APIConfig{
+			URL:       zabbixURL,
+			AuthToken: apiToken,
+			Timeout:   30,
 		},
 		OTLP: config.OTLPConfig{
 			Endpoint:    otlpEndpoint,
 			Protocol:    "http",
 			ServiceName: "zabbix-dna",
 		},
-		LogLevel: logLevel,
+		Logging: config.LoggingConfig{
+			Enabled:  true,
+			LogLevel: logLevel,
+		},
 	}
 
 	data, err := toml.Marshal(cfg)

@@ -20,12 +20,13 @@ func newItemCmd() *cobra.Command {
 }
 
 func newItemListCmd() *cobra.Command {
-	var hostName string
+	var hostNames []string
+	var hostGroupNames []string
 	var limit int
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List items for a host",
+		Short: "List items for hosts or host groups",
 		Run: func(cmd *cobra.Command, args []string) {
 			client, err := getZabbixClient(cmd)
 			handleError(err)
@@ -36,8 +37,11 @@ func newItemListCmd() *cobra.Command {
 				"sortfield": "name",
 			}
 
-			if hostName != "" {
-				params["host"] = hostName
+			if len(hostNames) > 0 {
+				params["hostids"] = getHostsIDs(client, hostNames)
+			}
+			if len(hostGroupNames) > 0 {
+				params["groupids"] = getHostGroupsIDs(client, hostGroupNames)
 			}
 
 			result, err := client.Call("item.get", params)
@@ -65,7 +69,8 @@ func newItemListCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&hostName, "host", "H", "", "Host name to list items for")
+	cmd.Flags().StringSliceVar(&hostNames, "host", []string{}, "Host names (comma-separated)")
+	cmd.Flags().StringSliceVar(&hostGroupNames, "hostgroup", []string{}, "Host group names (comma-separated)")
 	cmd.Flags().IntVarP(&limit, "limit", "l", 100, "Limit the number of items")
 
 	return cmd
@@ -122,5 +127,3 @@ func newItemCreateCmd() *cobra.Command {
 
 	return cmd
 }
-
-

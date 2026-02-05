@@ -28,7 +28,7 @@ func (r *TableRenderer) Render() {
 	table := tablewriter.NewWriter(os.Stdout)
 
 	// Get terminal width for responsiveness
-	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	width, _, err := term.GetSize(uintptr(os.Stdout.Fd()))
 	if err == nil && width > 0 {
 		table.SetColWidth(width / (len(r.Headers) + 1)) // Distribute width
 	}
@@ -41,23 +41,25 @@ func (r *TableRenderer) Render() {
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
 	table.SetReflowDuringAutoWrap(true) // Ensure it wraps correctly
 
-	// Visual consistency according to reference
-	// We use the "rounded" style or a very clean ASCII style
+	// Visual consistency: Rounded-like clean ASCII style
+	// We use Unicode box-drawing characters for a professional look
 	table.SetCenterSeparator("┼")
 	table.SetColumnSeparator("│")
 	table.SetRowSeparator("─")
 
+	// Set header styling
 	table.SetHeaderLine(true)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+
+	// Borders
 	table.SetBorder(true)
 	table.SetTablePadding(" ") // Clean padding
 	table.SetNoWhiteSpace(false)
 
-	// Responsiveness: auto-resize based on terminal width
-	// tablewriter handles this by default with SetAutoWrapText(true)
-
-	// Refined styling for NOC/SOC/SRE environments
-	// White on Black/Transparent with clean borders
-	table.SetHeaderColor(getHeaderColors(len(r.Headers))...)
+	// Auto-wrap for responsiveness
+	table.SetAutoWrapText(true)
+	table.SetReflowDuringAutoWrap(true)
 
 	table.AppendBulk(r.Rows)
 	table.Render()

@@ -42,20 +42,10 @@ written 100% in Go with a focus on observability and automation.`,
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				for {
-					choice, _ := tui.Start()
-					if choice == "" {
-						break
-					}
-					fmt.Printf("\n%s\n", bannerStyle.Render(fmt.Sprintf("ZABBIX-DNA CLI | v1.0.7")))
-					fmt.Printf("\n> Executando: %s\n\n", choice)
-					args := strings.Fields(choice)
-					cmd.Root().SetArgs(args)
-					if err := cmd.Root().Execute(); err != nil {
-						fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-					}
-					fmt.Println("\nPressione ENTER para continuar...")
-					bufio.NewReader(os.Stdin).ReadString('\n')
+				// Se nenhum argumento for passado, iniciamos o REPL (estilo zabbix-cli)
+				replCmd, _, _ := cmd.Root().Find([]string{"shell"})
+				if replCmd != nil {
+					replCmd.Run(replCmd, nil)
 				}
 			}
 		},

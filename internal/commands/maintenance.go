@@ -3,6 +3,8 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -16,8 +18,31 @@ func newMaintenanceCmd() *cobra.Command {
 	cmd.AddCommand(newMaintenanceListCmd())
 	cmd.AddCommand(newMaintenanceCreateCmd())
 	cmd.AddCommand(newMaintenanceDeleteCmd())
+	cmd.AddCommand(newMaintenanceRemoveCmd())
 
 	return cmd
+}
+
+func newMaintenanceRemoveCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "remove [maintenance id(s)]",
+		Aliases: []string{"remove_maintenance_definition"},
+		Short:   "Remove a maintenance definition by ID(s)",
+		Args:    cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			client, err := getZabbixClient(cmd)
+			handleError(err)
+
+			// Delete the maintenance(s)
+			result, err := client.Call("maintenance.delete", args)
+			handleError(err)
+
+			var resp map[string]interface{}
+			json.Unmarshal(result, &resp)
+
+			outputResult(cmd, "Removed maintenance definition(s).", nil, nil)
+		},
+	}
 }
 
 func newMaintenanceListCmd() *cobra.Command {
@@ -48,12 +73,16 @@ func newMaintenanceListCmd() *cobra.Command {
 				if p["maintenance_type"].(string) == "1" {
 					mType = "No data"
 				}
+
+				sinceSec, _ := strconv.ParseInt(p["active_since"].(string), 10, 64)
+				tillSec, _ := strconv.ParseInt(p["active_till"].(string), 10, 64)
+
 				rows = append(rows, []string{
 					fmt.Sprintf("%v", p["maintenanceid"]),
 					fmt.Sprintf("%v", p["name"]),
 					mType,
-					fmt.Sprintf("%v", p["active_since"]),
-					fmt.Sprintf("%v", p["active_till"]),
+					time.Unix(sinceSec, 0).Format("2006-01-02 15:04:05"),
+					time.Unix(tillSec, 0).Format("2006-01-02 15:04:05"),
 				})
 			}
 
@@ -67,10 +96,11 @@ func newMaintenanceListCmd() *cobra.Command {
 }
 
 func newMaintenanceCreateCmd() *cobra.Command {
-	var hostID string
-	var groupID string
-	var activeSince string
-	var activeTill string
+	var hosts []string
+	var hostgroups []string
+	var activeSince int64
+	var activeTill int64
+	var period int
 
 	cmd := &cobra.Command{
 		Use:   "create [maintenance name]",
@@ -80,6 +110,16 @@ func newMaintenanceCreateCmd() *cobra.Command {
 			client, err := getZabbixClient(cmd)
 			handleError(err)
 
+			if activeSince == 0 {
+				activeSince = time.Now().Unix()
+			}
+			if activeTill == 0 {
+				if period == 0 {
+					period = 3600 // 1 hour default
+				}
+				activeTill = activeSince + int64(period)
+			}
+
 			params := map[string]interface{}{
 				"name":         args[0],
 				"active_since": activeSince,
@@ -88,16 +128,16 @@ func newMaintenanceCreateCmd() *cobra.Command {
 					{
 						"timeperiod_type": 0, // One time only
 						"start_date":      activeSince,
-						"period":          3600, // 1 hour default
+						"period":          activeTill - activeSince,
 					},
 				},
 			}
 
-			if hostID != "" {
-				params["hostids"] = []string{hostID}
+			if len(hosts) > 0 {
+				params["hostids"] = getHostsIDs(client, hosts)
 			}
-			if groupID != "" {
-				params["groupids"] = []string{groupID}
+			if len(hostgroups) > 0 {
+				params["groupids"] = getHostGroupsIDs(client, hostgroups)
 			}
 
 			result, err := client.Call("maintenance.create", params)
@@ -107,18 +147,15 @@ func newMaintenanceCreateCmd() *cobra.Command {
 			json.Unmarshal(result, &resp)
 			maintenanceIDs := resp["maintenanceids"].([]interface{})
 
-			headers := []string{"Maintenance", "Action", "Status", "ID"}
-			rows := [][]string{{args[0], "Create", "Success", fmt.Sprintf("%v", maintenanceIDs[0])}}
-			outputResult(cmd, resp, headers, rows)
+			outputResult(cmd, fmt.Sprintf("Created maintenance definition (%v).", maintenanceIDs[0]), nil, nil)
 		},
 	}
 
-	cmd.Flags().StringVarP(&hostID, "hostid", "H", "", "Host ID for maintenance")
-	cmd.Flags().StringVarP(&groupID, "groupid", "g", "", "Host group ID for maintenance")
-	cmd.Flags().StringVarP(&activeSince, "since", "s", "", "Active since (Unix timestamp)")
-	cmd.Flags().StringVarP(&activeTill, "till", "t", "", "Active till (Unix timestamp)")
-	cmd.MarkFlagRequired("since")
-	cmd.MarkFlagRequired("till")
+	cmd.Flags().StringSliceVar(&hosts, "host", []string{}, "Host names (comma-separated)")
+	cmd.Flags().StringSliceVar(&hostgroups, "hostgroup", []string{}, "Host group names (comma-separated)")
+	cmd.Flags().Int64Var(&activeSince, "since", 0, "Active since (Unix timestamp, defaults to now)")
+	cmd.Flags().Int64Var(&activeTill, "till", 0, "Active till (Unix timestamp)")
+	cmd.Flags().IntVar(&period, "period", 3600, "Period in seconds (default 1 hour if till is not set)")
 
 	return cmd
 }
