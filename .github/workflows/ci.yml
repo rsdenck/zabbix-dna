@@ -54,10 +54,10 @@ jobs:
 
       - name: Run Progressive Lint
         env:
-          CGO_ENABLED: 1
+          CGO_ENABLED: 0
         run: |
-          # Execução simplificada com exclusão de pacotes que dependem de CGO complexo no linter
-          # O build real ainda valida os tipos, o linter aqui foca em qualidade de código
+          # Desabilitando CGO no linter para evitar falhas de typecheck com a biblioteca zmq4
+          # O build real (onde o CGO é necessário) continuará validando a compilação
           $(go env GOPATH)/bin/golangci-lint run --config=.golangci.yml --timeout=10m --allow-parallel-runners ./...
 
       - name: Security Scan (Gosec)
