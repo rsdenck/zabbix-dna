@@ -57,6 +57,7 @@ jobs:
           # O lint agora roda com CGO desabilitado por padrão (via golangci-lint ou env)
           # As build tags //go:build cgo isolam o código que depende de zmq4,
           # permitindo que o typecheck e outros linters funcionem em qualquer ambiente.
+          export CGO_ENABLED=0
           $(go env GOPATH)/bin/golangci-lint run --config=.golangci.yml --timeout=10m --allow-parallel-runners ./...
 
       - name: Security Scan (Gosec)

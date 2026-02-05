@@ -28,21 +28,25 @@ func (r *TableRenderer) Render() {
 
 	// Strictly aligned columns and fixed headers
 	table.SetHeader(r.Headers)
-	table.SetAutoWrapText(false)
+	table.SetAutoWrapText(true) // Enable wrap for better responsiveness
 	table.SetAutoFormatHeaders(true)
 	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetReflowDuringAutoWrap(true) // Ensure it wraps correctly
 
 	// Visual consistency according to reference
 	// We use the "rounded" style or a very clean ASCII style
 	table.SetCenterSeparator("┼")
 	table.SetColumnSeparator("│")
 	table.SetRowSeparator("─")
-	
+
 	table.SetHeaderLine(true)
 	table.SetBorder(true)
 	table.SetTablePadding(" ") // Clean padding
 	table.SetNoWhiteSpace(false)
+
+	// Responsiveness: auto-resize based on terminal width
+	// tablewriter handles this by default with SetAutoWrapText(true)
 
 	// Refined styling for NOC/SOC/SRE environments
 	// White on Black/Transparent with clean borders

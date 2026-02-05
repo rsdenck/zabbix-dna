@@ -29,7 +29,7 @@ func newProxyListCmd() *cobra.Command {
 			handleError(err)
 
 			params := map[string]interface{}{
-				"output":      []string{"proxyid", "name", "operating_mode", "address", "version", "compatibility"},
+				"output":      "extend",
 				"selectHosts": "count",
 				"limit":       limit,
 			}
@@ -81,5 +81,3 @@ func newProxyListCmd() *cobra.Command {
 
 	return cmd
 }
-
-
