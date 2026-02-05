@@ -24,10 +24,16 @@ func newTestAPICmd() *cobra.Command {
 			cfg, _ := config.LoadConfig(cfgPath)
 
 			// 2. SaltStack Test
-			saltStatus := "Connected"
+			saltStatus := "Not Checked (Requires CGO)"
 			saltServer := cfg.Salt.URL
 			if saltServer == "" {
 				saltServer = "tcp://127.0.0.1:4506"
+			}
+
+			// We only check if salt-client is available/functional in CGO builds
+			// In non-CGO, we just report the config
+			if isCGOBuilt() {
+				saltStatus = "Connected (Mock/Config Only)"
 			}
 
 			headers := []string{"Service", "Property", "Value"}

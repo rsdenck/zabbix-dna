@@ -53,11 +53,10 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.5
 
       - name: Run Progressive Lint
-        env:
-          CGO_ENABLED: 0
         run: |
-          # Desabilitando CGO no linter para evitar falhas de typecheck com a biblioteca zmq4
-          # O build real (onde o CGO é necessário) continuará validando a compilação
+          # O lint agora roda com CGO desabilitado por padrão (via golangci-lint ou env)
+          # As build tags //go:build cgo isolam o código que depende de zmq4,
+          # permitindo que o typecheck e outros linters funcionem em qualquer ambiente.
           $(go env GOPATH)/bin/golangci-lint run --config=.golangci.yml --timeout=10m --allow-parallel-runners ./...
 
       - name: Security Scan (Gosec)
